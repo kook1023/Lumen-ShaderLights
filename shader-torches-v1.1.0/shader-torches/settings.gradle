@@ -9,4 +9,4 @@ pluginManagement {
 	}
 }
 
-rootProject.name = 'shadertorches'
+rootProject.name = 'lumen-shaderlights'
