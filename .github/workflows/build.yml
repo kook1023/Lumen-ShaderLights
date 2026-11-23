@@ -1,0 +1,57 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        # The mod lives in a folder next to .github, not in the repo root.
+        working-directory: shader-torches
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21   # needed to run Gradle; the mod itself targets Java 17
+          cache: gradle
+
+      - name: Build
+        run: |
+          chmod +x gradlew
+          ./gradlew build --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shadertorches-jar
+          path: |
+            shader-torches/build/libs/*.jar
+            !shader-torches/build/libs/*-sources.jar
+          if-no-files-found: error
+
+  # Push a tag like v1.1.0 to publish the jar as a GitHub Release.
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: shadertorches-jar
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.jar
+          generate_release_notes: true
