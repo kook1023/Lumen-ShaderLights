@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "shadertorches",
+  "version": "${version}",
+  "name": "Shader Torches",
+  "description": "Makes held \"torch\" items from any mod give off dynamic light in Iris shader packs - with a custom colour and intensity per item. Client-side only.",
+  "authors": [
+    "Shader Torches contributors"
+  ],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.shadertorches.ShaderTorches"
+    ],
+    "modmenu": [
+      "dev.shadertorches.compat.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "shadertorches.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.21",
+    "minecraft": "1.20.1",
+    "java": ">=17",
+    "fabric-api": "*"
+  },
+  "recommends": {
+    "iris": "*"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "cloth-config": "*"
+  }
+}
