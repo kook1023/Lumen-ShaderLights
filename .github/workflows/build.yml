@@ -16,7 +16,7 @@ jobs:
     defaults:
       run:
         # The mod lives in a folder next to .github, not in the repo root.
-        working-directory: shader-torches
+        working-directory: shader-torches-v1.1.0
     steps:
       - uses: actions/checkout@v4
 
@@ -35,8 +35,8 @@ jobs:
         with:
           name: shadertorches-jar
           path: |
-            shader-torches/build/libs/*.jar
-            !shader-torches/build/libs/*-sources.jar
+            shader-torches-v1.1.0/build/libs/*.jar
+            !shader-torches-v1.1.0/build/libs/*-sources.jar
           if-no-files-found: error
 
   # Push a tag like v1.1.0 to publish the jar as a GitHub Release.
@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: shadertorches-jar
+          name: lumen-shaderlights-v1.1.0-jar
           path: dist
       - uses: softprops/action-gh-release@v2
         with:
