@@ -32,7 +32,6 @@ jobs:
         run: |
           pwd
           ls -la
-          ls -la build
 
       - name: Build
         run: |
