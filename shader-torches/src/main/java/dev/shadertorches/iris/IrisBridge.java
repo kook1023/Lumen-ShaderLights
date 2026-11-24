@@ -113,14 +113,18 @@ public final class IrisBridge {
             int level = light;
             Match colorSource = TorchMatcher.NONE;
             if (own.level() > 0) {
-                level = Math.max(level, own.level());
+                // Items from your list set the level exactly, so Intensity can also DIM a block item that glows by
+                // itself. Auto-detected torches only ever raise it. With "old hand light" Iris has already folded
+                // the off-hand's own glow into `light`, so we only dim when the off-hand is empty.
+                boolean canDim = own.exact() && (!alsoOffhand || player.getOffhandItem().isEmpty());
+                level = canDim ? own.level() : Math.max(level, own.level());
                 colorSource = own;
             }
             if (off.level() > Math.max(light, own.level())) {
                 level = off.level();
                 colorSource = off;
             }
-            if (level > light) {
+            if (level != light) {
                 h.lightValue().setInt(supplier, level);
             }
 

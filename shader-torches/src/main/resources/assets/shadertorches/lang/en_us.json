@@ -21,7 +21,7 @@
   "shadertorches.config.item.id": "Item ID",
   "shadertorches.config.item.id.tooltip": "e.g. examplemod:blue_torch. You can use * as a wildcard (examplemod:*_lamp). Use /shadertorches addheld to add the item in your hand.",
   "shadertorches.config.item.intensity": "Intensity",
-  "shadertorches.config.item.intensity.tooltip": "How bright the held light is (0-15). Raises light only: it never dims an item that already glows brighter. 0 = leave this item alone. Note: Photon, Solas and Rethinking Voxels ignore the light level; in Rethinking Voxels the mod dims the colour instead.",
+  "shadertorches.config.item.intensity.tooltip": "Held light level 1-15, used exactly: it can also dim an item that already glows by itself. 0 = leave this item alone. Lumen: Shaders uses it for brightness AND reach. Photon, Solas and Rethinking Voxels ignore it; in Rethinking Voxels the mod dims the colour instead.",
   "shadertorches.config.item.intensity.value": "Intensity: %s",
   "shadertorches.config.item.intensity.off": "Off (ignored)",
   "shadertorches.config.item.use_color": "Custom colour",

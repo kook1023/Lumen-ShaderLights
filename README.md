@@ -10,7 +10,8 @@ New to the code? Read **docs/HOW_IT_WORKS.md**. Want a shader pack to support th
 - Any **non-vanilla** item whose id ends in `torch` lights up (toggle in config).
 - Your own items: **intensity**, **colour** (hue + saturation sliders with a live preview box) and an optional
   **"Pretend to be"** item.
-- Held light only (main hand / off-hand). Never touches vanilla items, never *lowers* light an item already gives.
+- Held light only (main hand / off-hand). Never touches vanilla items. Items in your list get exactly the intensity you set
+  (it can also dim an item that glows by itself); auto-detected torches only ever get brighter.
 
 ## How colour reaches each shader pack
 | Pack (checked in its source) | What happens |
@@ -55,7 +56,7 @@ applies **immediately**.
     }
 
 - `id`: `modid:item`, `*` wildcards, or a bare `item` for any namespace.
-- `level`: intensity 0-15 (raises light only; `0` = leave the item alone).
+- `level`: intensity 1-15, used exactly (it can also dim); `0` = leave the item alone.
 - `color`: `#RRGGBB`, or `""` to let the pack decide.
 - `pretendToBe`: any item id, or `""` for automatic.
 - `rgbIdMode`: `AUTO`, `ON` or `OFF` (see Rethinking Voxels above).

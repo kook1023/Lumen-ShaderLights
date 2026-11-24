@@ -41,7 +41,7 @@ So the mod's whole job is: **right after Iris fills in those numbers, overwrite 
       v
     IrisBridge.afterUpdate(supplier)
       |-- TorchMatcher.matchFor(heldItem)    "is this a torch? what level/colour/pretend?"   -> Match
-      |-- raise lightValue                   (never lowers)
+      |-- set lightValue                     (exact for your list, raise-only for auto-detected)
       |-- set lightColor                     (exact colour uniform)
       '-- applyItemId(...)                   choose heldItemId, see section 4
       |

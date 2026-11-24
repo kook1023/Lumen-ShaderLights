@@ -22,11 +22,13 @@ public final class TorchMatcher {
      * @param level      light level 1-15 (0 = not a torch / excluded)
      * @param color      light colour (0..1 per channel) or null to leave the pack's own colour
      * @param pretendTo  item the shader should think this is, or null for automatic
+     * @param exact      true for items from your list: the level is used as-is (it can dim an item that glows by
+     *                   itself). false for auto-detected torches: the level only ever raises the light.
      */
-    public record Match(int level, Vector3f color, ResourceLocation pretendTo) {
+    public record Match(int level, Vector3f color, ResourceLocation pretendTo, boolean exact) {
     }
 
-    public static final Match NONE = new Match(0, null, null);
+    public static final Match NONE = new Match(0, null, null, false);
 
     private static final Pattern ID_CHARS = Pattern.compile("[a-z0-9_.\\-/*:]+");
     private static volatile Snapshot snapshot = new Snapshot(false, false, 14, List.of());
@@ -47,7 +49,7 @@ public final class TorchMatcher {
         Snapshot(boolean enabled, boolean matchSuffix, int suffixLevel, List<Rule> rules) {
             this.enabled = enabled;
             this.matchSuffix = matchSuffix;
-            this.suffixMatch = new Match(suffixLevel, null, null);
+            this.suffixMatch = new Match(suffixLevel, null, null, false);
             this.rules = rules;
         }
 
@@ -110,7 +112,7 @@ public final class TorchMatcher {
         ResourceLocation pretend = e.pretendToBe == null || e.pretendToBe.isBlank()
                 ? null
                 : ResourceLocation.tryParse(e.pretendToBe.trim().toLowerCase(Locale.ROOT));
-        return new Rule(pattern, new Match(Math.max(0, Math.min(15, e.level)), color, pretend));
+        return new Rule(pattern, new Match(Math.max(0, Math.min(15, e.level)), color, pretend, true));
     }
 
     private static Pattern glob(String raw) {
