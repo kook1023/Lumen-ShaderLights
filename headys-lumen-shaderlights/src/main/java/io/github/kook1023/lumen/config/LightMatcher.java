@@ -112,7 +112,12 @@ public final class LightMatcher {
         ResourceLocation pretend = e.pretendToBe == null || e.pretendToBe.isBlank()
                 ? null
                 : ResourceLocation.tryParse(e.pretendToBe.trim().toLowerCase(Locale.ROOT));
-        return new Rule(pattern, new Match(Math.max(0, Math.min(15, e.level)), color, pretend, true));
+        int level = Math.max(0, Math.min(15, e.level));
+        if (level == 0) {
+            // Level 0 = "no held light at all" (unlit / burnt-out torches): no colour, no pretend.
+            return new Rule(pattern, new Match(0, null, null, true));
+        }
+        return new Rule(pattern, new Match(level, color, pretend, true));
     }
 
     private static Pattern glob(String raw) {

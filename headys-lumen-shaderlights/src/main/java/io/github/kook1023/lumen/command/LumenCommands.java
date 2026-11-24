@@ -104,7 +104,7 @@ public final class LumenCommands {
 
     private static String describeEntry(LumenConfig.Entry e) {
         StringBuilder sb = new StringBuilder(e.id);
-        sb.append(e.level == 0 ? "  (ignored)" : "  level " + e.level);
+        sb.append(e.level == 0 ? "  OFF (no light)" : "  level " + e.level);
         sb.append(e.color.isEmpty() ? ", pack colour" : ", " + e.color);
         if (!e.pretendToBe.isEmpty()) {
             sb.append(", as ").append(e.pretendToBe.replace("minecraft:", ""));

@@ -66,6 +66,7 @@ So you can check your logic against real input. "Colour" is `heldBlockLightColor
 | Item in their list **with a colour**, pack knows the item (e.g. pink `minecraft:torch`) | cleared to `-1` | their level | their colour |
 | Item in their list **with a colour**, pack does not know it (modded item) | `-1` | their level | their colour |
 | Item in their list with **only an intensity**, pack knows it | your id (kept) | their level | white |
+| Item in their list with **intensity 0** ("no light", e.g. an unlit torch) | cleared to `-1` | `0` | untouched |
 | Item with **"Pretend to be"** another item | that item's id | their level | their colour, or white if none |
 | Modded item ending in `torch`, auto-detected, no colour | your `minecraft:torch` id | 14 (default) | white |
 | Anything else | untouched (normal Iris behaviour) | untouched | untouched |

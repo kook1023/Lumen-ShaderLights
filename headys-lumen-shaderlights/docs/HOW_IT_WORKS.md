@@ -85,7 +85,9 @@ Takeaways:
 
 ## 4. The decision order for the item id (`IrisBridge.applyItemId`)
 
-Only runs for an item the mod matched in this hand. First:
+Only runs for an item the mod matched in this hand. An item in your list with intensity **0** skips all of this:
+its id is cleared to `-1` and its light set to 0, so no pack lights it (meant for unlit or burnt-out torches).
+Otherwise, first:
 
     0. The pack already has an id for this item (e.g. minecraft:torch)?
        -> keep the pack's id, UNLESS the item is in your list with a colour or a "Pretend to be" (pink torch): then

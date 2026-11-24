@@ -5,7 +5,7 @@
   "name": "Heady's Lumen: ShaderLights",
   "description": "Makes held \"torch\" items from any mod - and any vanilla item you choose - give off dynamic light in Iris shader packs, with a custom colour and intensity per item. Client-side only. Command: /lumen",
   "authors": [
-    "Heady"
+    "Headypeace"
   ],
   "contributors": [
     "Claude (AI assistant by Anthropic)"

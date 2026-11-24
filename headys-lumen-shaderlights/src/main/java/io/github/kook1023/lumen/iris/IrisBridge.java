@@ -114,13 +114,17 @@ public final class IrisBridge {
             int light = h.lightValue().getInt(supplier);
             int level = light;
             Match colorSource = LightMatcher.NONE;
+            // Items from your list set the level exactly, so Intensity can also DIM a block item that glows by
+            // itself. Auto-detected torches only ever raise it. With "old hand light" Iris has already folded
+            // the off-hand's own glow into `light`, so we only dim when the off-hand is empty.
+            boolean canDim = own.exact() && (!alsoOffhand || player.getOffhandItem().isEmpty());
+            // Level 0 in your list = "this item gives no held light at all" (e.g. an unlit or burnt-out torch).
+            boolean ownOff = own.exact() && own.level() == 0;
             if (own.level() > 0) {
-                // Items from your list set the level exactly, so Intensity can also DIM a block item that glows by
-                // itself. Auto-detected torches only ever raise it. With "old hand light" Iris has already folded
-                // the off-hand's own glow into `light`, so we only dim when the off-hand is empty.
-                boolean canDim = own.exact() && (!alsoOffhand || player.getOffhandItem().isEmpty());
                 level = canDim ? own.level() : Math.max(level, own.level());
                 colorSource = own;
+            } else if (ownOff && canDim) {
+                level = 0;
             }
             if (off.level() > Math.max(light, own.level())) {
                 level = off.level();
@@ -138,6 +142,10 @@ public final class IrisBridge {
             // --- B..E. item id (heldItemId) ---
             if (own.level() > 0) {
                 applyItemId(h, supplier, cfg, own, map);
+            } else if (ownOff) {
+                // Hide the item from the pack too: packs that colour by id (Photon, Solas, Rethinking Voxels)
+                // would otherwise still light an item they know, whatever the light level says.
+                h.intId().setInt(supplier, map != null ? map.defaultReturnValue() : -1);
             }
 
             remember(h, supplier, ownHand);
