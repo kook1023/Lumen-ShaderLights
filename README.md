@@ -1,6 +1,6 @@
 # Heady's Lumen: ShaderLights
 
-By **Headypeace**. A client-side Fabric mod for **Minecraft 1.20.1** that makes held **torch-like items from any mod**, and any vanilla
+By **Heady**. A client-side Fabric mod for **Minecraft 1.20.1** that makes held **torch-like items from any mod**, and any vanilla
 item you choose, give off **dynamic light in Iris shader packs**. Each item can get its own **colour** and
 **intensity**. Nothing runs on the server and nothing changes Minecraft's own lighting: the mod only adjusts the
 handheld-light values Iris passes to the shader pack.
@@ -20,14 +20,15 @@ intensity (see below).
 ## How the colour reaches each shader pack
 | Pack | What happens |
 |---|---|
-| **Heady's Lumen: ShaderPack_PhotonFork (unreleased)** | Reads Iris' `heldBlockLightColor`: your **exact colour**, and intensity sets brightness **and** reach. |
+| **Heady's Lumen: ShaderPack_PhotonFork** | Reads Iris' `heldBlockLightColor`: your **exact colour**, and intensity sets brightness **and** reach. |
 | **Rethinking Voxels** | Reads the item id *as a colour*: the mod sends your **exact colour** (16 steps per channel). Intensity dims the colour. |
-| **Complementary** (Reimagined/Unbound) | Colour table by item id: the mod picks the item with the **closest colour**. Intensity works. |
+| **Complementary Reimagined** | Colour table by item id: the mod picks the item with the **closest colour**. Intensity works. |
 | **Photon** | Colour table: **closest colour**, including Photon's 16 colour slots for modded lights. The pack ignores intensity when coloured lights are on. |
 | **Solas** | Colour table: **closest colour**. The pack ignores intensity. |
-| BSL / Bliss / Eclipse | Not inspected. Likely table-style: closest colour, or choose with "Pretend to be". |
 
-The mod detects which approach a pack needs by itself. `/lumen status` shows what it found.
+These are the packs whose source was checked. The mod detects which approach a pack needs by itself, and
+`/lumen status` shows what it found. Where it can only guess, "Pretend to be" lets you choose the item yourself.
+Details per pack: `docs/HOW_IT_WORKS.md`.
 
 ## Repository layout
     Lumen-ShaderLights/                 <- repo root
@@ -38,7 +39,7 @@ The mod detects which approach a pack needs by itself. `/lumen status` shows wha
        |- src/main/java/...             code (package io.github.kook1023.lumen)
        |- src/main/resources/...        fabric.mod.json, mixins, language file
        |- docs/HOW_IT_WORKS.md          guide to the code: how it works, where to look, how to change it
-       |- docs/FOR_SHADER_AUTHORS.md    what a shader pack needs to add (about 5 lines of GLSL)
+       |- docs/FOR_SHADER_AUTHORS.md    how a shader pack can support exact colours and intensity
        '- build.gradle, gradle.properties, gradlew ...
 
 The jar includes `LICENSE` from the repo root.
@@ -115,7 +116,8 @@ permission, and you may not charge for it.
 Run `/lumen status` with a shader pack enabled while holding the item.
 - `Iris hook: waiting` -> no pack has run yet; enable one.
 - `Iris hook: FAILED (...)` -> your Iris version is laid out differently; check `logs/latest.log` for `Lumen ShaderLights`.
-- `Sent to shader: main: id=-1 light=0` -> the item did not match (check its id under "Your items").
+- `Sent to shader: ... light=0` -> the item did not match (check its id under "Your items"). `id=-1` with a light
+  above 0 is normal on the PhotonFork.
 - `id` and `light` look right but there is no light -> the pack is not using them (its handheld lighting may be off).
 - Colour is off but light works -> the pack only offers table colours; pick one with "Pretend to be", or use the
   PhotonFork pack.
