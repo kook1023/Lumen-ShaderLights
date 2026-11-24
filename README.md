@@ -21,13 +21,14 @@ intensity (see below).
 | Pack | What happens |
 |---|---|
 | **Heady's Lumen: ShaderPack_PhotonFork** | Reads Iris' `heldBlockLightColor`: your **exact colour**, and intensity sets brightness **and** reach. |
-| **Rethinking Voxels** (current releases) | Lights the hand from how the held item is **drawn**: the mod draws your item as the vanilla light with the **closest colour** (or your "Pretend to be"). The pack ignores intensity. Needs the pack's Dynamic Handheld Lighting on. |
-| **Rethinking Voxels** (GitHub `main` branch) | Reads the item id *as a colour*: the mod sends your **exact colour** (16 steps per channel). Intensity dims the colour. |
+| **Rethinking Voxels**, GitHub `main` branch (tested in game) | Reads the item id *as a colour*: the mod sends your **exact colour** (16 steps per channel), and intensity works by dimming that colour. |
+| **Rethinking Voxels**, release beta 9 from Modrinth (tested in game) | Lights the hand from how the held item is **drawn**: the mod draws your item as the vanilla light with the **closest colour** (or your "Pretend to be"). The pack ignores intensity. Needs the pack's Dynamic Handheld Lighting on. |
 | **Complementary Reimagined** | Colour table by item id: the mod picks the item with the **closest colour**. Intensity works. |
 | **Photon** | Colour table: **closest colour**, including Photon's 16 colour slots for modded lights. The pack ignores intensity when coloured lights are on. |
 | **Solas** | Colour table: **closest colour**. The pack ignores intensity. |
 
-These are the packs whose source was checked. The mod detects which approach a pack needs by itself, and
+Both Rethinking Voxels versions are handled automatically; `/lumen status` shows which one the mod detected. The
+other rows are packs whose source was checked. The mod detects which approach a pack needs by itself, and
 `/lumen status` shows what it found. Where it can only guess, "Pretend to be" lets you choose the item yourself.
 Details per pack: `docs/HOW_IT_WORKS.md`.
 
@@ -95,7 +96,7 @@ to add a row and **X** to remove one. Saving applies immediately.
 - `color`: `#RRGGBB`, or `""` to let the pack decide.
 - `pretendToBe`: any item id, or `""` for automatic.
 - `rgbIdMode`: `AUTO`, `ON` or `OFF` (the Rethinking Voxels colour-in-id trick).
-- `matchRenderedItem`: also change how your items are drawn (needed for current Rethinking Voxels releases).
+- `matchRenderedItem`: also change how your items are drawn (needed for Rethinking Voxels beta 9).
 
 ## Heady's Lumen: ShaderPack_PhotonFork
 A fork of **Photon** by SixthSurge with one changed file (`shaders/include/lighting/handheld_lighting.glsl`) and

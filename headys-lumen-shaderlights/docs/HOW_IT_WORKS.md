@@ -53,7 +53,7 @@ modded torches it detects, and every item in your list (vanilla ones included, e
 Why one supplier per hand? Iris has two `HeldItemSupplier` objects, one for the main hand, one for the off-hand.
 `update()` runs for both. Our hook sees which hand it is by reading the supplier's `hand` field.
 
-**The second hook: how an item is drawn.** Some packs (current Rethinking Voxels releases) ignore `heldItemId` and
+**The second hook: how an item is drawn.** Some packs (Rethinking Voxels beta 9) ignore `heldItemId` and
 instead turn the rendered hand into voxels: the held item glows if its *drawn* material is a light. Iris tells the
 shader that material through another value, `currentRenderedItemId`, set each time an item is drawn (from
 `block.properties` for block items such as torches, `item.properties` otherwise). So:
@@ -72,26 +72,31 @@ that vanilla light to the pack wherever it is drawn (in hand, dropped, in item f
 
 ## 3. What each shader pack actually does (from reading their source)
 
-Checked against the packs' public source on GitHub (Photon `2a3d502`, Rethinking Voxels `main` `1fd788f` and
-`singlesample-softshadows-v2` `d76c831`, Complementary Reimagined `e10d27d`, Solas `2ebf0cf`). Other versions may differ.
+Checked against the packs' public source on GitHub (Photon `2a3d502`, Rethinking Voxels `main` `1fd788f` and the
+newer `singlesample-softshadows-v2` `d76c831`, Complementary Reimagined `e10d27d`, Solas `2ebf0cf`). Other versions may differ. Both Rethinking Voxels versions were also tested in game: GitHub `main` gives the exact
+colour with working intensity, release beta 9 (Modrinth) gives the closest colour.
 
 | Pack | Brightness of the held light | Colour of the held light | Where (in `shaders/`) |
 |------|------------------------------|--------------------------|-----------------------|
 | **Heady's Lumen: ShaderPack_PhotonFork** | the light level sets brightness **and** reach (for items outside Photon's table) | `heldBlockLightColor` when it is set; otherwise Photon's table | `include/lighting/handheld_lighting.glsl` |
 | **Photon** | with coloured lights **on**: fixed per table entry, light level unused. Off: the light level | `heldItemId` 10032-10079 -> colour table. 10064-10079 are 16 colour slots for modded lights, listed under `simplylight:*` and `luminax:*` item names. Any other id: **no light** while coloured lights are on | `include/lighting/handheld_lighting.glsl`, colours in `include/lighting/lpv/light_colors.glsl` |
-| **Rethinking Voxels**, current releases (Complementary-style ids: torch = 44002) | from the light's material; the light level is not used | the hand is voxelized and glows if the **drawn** item's material (`currentRenderedItemId`) is a light; colour from that material. `heldItemId` is not used for this. Needs the pack's Dynamic Handheld Lighting | `program/shadow.glsl` |
+| **Rethinking Voxels**, release beta 9 (Complementary-style ids: torch = 44002) | from the light's material; the light level is not used | the hand is voxelized and glows if the **drawn** item's material (`currentRenderedItemId`) is a light; colour from that material. `heldItemId` is not used for this. Needs the pack's Dynamic Handheld Lighting | `program/shadow.glsl` |
 | **Rethinking Voxels**, GitHub `main` (colour-coded ids: torch = 927) | its coloured held light has a fixed brightness (`10 x HELD_LIGHTING_MODE`); the light level is only used by its ordinary lighting | **the item id itself**, for ids 1-9999: `R = id % 16`, `G = (id >> 4) % 16`, `B = (id >> 8) % 16` (each x16). Any other id (e.g. `-1` for a modded item): no coloured held light | `program/prepare7_fsh.glsl` |
 | **Complementary Reimagined** | `heldBlockLightValue` | with coloured lighting on: `heldItemId - 44000` -> colour table | `lib/lighting/heldLighting.glsl` |
 | **Solas** | fixed (`DYNAMIC_HANDLIGHT_STRENGTH`); the light level is not read | `heldItemId` 1-97 -> colour table. Any other id: **no held light at all** | `lib/lighting/handlight.glsl` |
 
 None of the four stock packs reads `heldBlockLightColor`; only the PhotonFork does. That is why the exact colour you
-pick appears on the PhotonFork and on Rethinking Voxels (through the id), while the other packs show the closest
+pick appears on the PhotonFork and on Rethinking Voxels `main` (through the id), while the other packs, Rethinking
+Voxels beta 9 included, show the closest
 colour their table offers.
 
 Takeaways:
 1. If a pack uses a **table** (Photon, Complementary, Solas) the best the mod can do is make the shader believe the
    item is one of the table's entries. It picks the entry whose colour is closest to the one you chose.
-2. If a pack **decodes the id as a colour** (Rethinking Voxels) the mod can send any colour (16 steps per channel).
+2. If a pack **decodes the id as a colour** (Rethinking Voxels `main`) the mod can send any colour (16 steps per
+   channel), and dims it for a lower intensity.
+2b. If a pack lights the hand from the **drawn** item (Rethinking Voxels beta 9), the mod draws your item as the
+   closest-colour vanilla light (`RenderedItemBridge`).
 3. If a pack **reads `heldBlockLightColor`** (the PhotonFork) the mod sends the exact colour and keeps the id out of
    the way.
 4. Table packs give **no** light to ids they do not know (Photon with coloured lights on, Solas, and Rethinking
@@ -112,7 +117,7 @@ Otherwise, first:
 Then, top to bottom, the first step that finds an id wins:
 
     1. "Pretend to be" is set and the pack knows that item         -> that item's id
-    2. The entry has a colour and the pack decodes ids as colours  -> the colour encoded as an id (Rethinking Voxels)
+    2. The entry has a colour and the pack decodes ids as colours  -> the colour encoded as an id (RV `main`)
     3. The entry has a colour, the pack uses a table               -> id of the item with the closest colour
        (skipped when the pack reads heldBlockLightColor: the colour is exact there already)
     4. Nothing found:
@@ -157,7 +162,7 @@ text, on a background thread.
     |       '-- MissingClothScreen.java
     |-- iris/
     |   |-- IrisBridge.java              THE HEART. Everything that touches Iris' numbers
-    |   |-- RgbId.java                   encode/decode the Rethinking Voxels colour-in-id format
+    |   |-- RgbId.java                   encode/decode the Rethinking Voxels `main` colour-in-id format
     |   |-- PackScanner.java             checks whether the active pack mentions heldBlockLightColor
     |   '-- RenderedItemBridge.java      the second hook: changes how your items are drawn (currentRenderedItemId)
     '-- mixin/

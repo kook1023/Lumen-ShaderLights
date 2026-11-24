@@ -75,6 +75,10 @@ Separately, while one of these items is **drawn**, the mod sets `currentRendered
 the vanilla light it poses as (or `0` for intensity 0). That is for packs that light the hand from the rendered
 item's material rather than from `heldItemId`.
 
+Tested in game with both Rethinking Voxels versions: GitHub `main` decodes `heldItemId` as a colour, so players get
+the exact colour and intensity there; release beta 9 lights the hand from the drawn item's material, so players get
+the closest vanilla light colour. Reading `heldBlockLightColor` (section 2) would give exact colours in any pack.
+
 The id is cleared in the first row as a courtesy for packs that check the id first. Packs that follow the rule in
 section 2 get the right result either way.
 
