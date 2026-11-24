@@ -45,7 +45,25 @@ public final class LightPalette {
             new Ref("minecraft:respawn_anchor", 0xA626E6),
             new Ref("minecraft:pearlescent_froglight", 0xF299E6),
             new Ref("minecraft:verdant_froglight", 0x8CFF80),
-            new Ref("minecraft:sea_pickle", 0x73FF8C));
+            new Ref("minecraft:sea_pickle", 0x73FF8C),
+            new Ref("minecraft:redstone_block", 0xFF1F14),
+            new Ref("minecraft:sculk_sensor", 0x33CCCC),
+            new Ref("minecraft:warped_fungus", 0x33E6B3),
+            // Photon (recent versions) keeps 16 colour slots for modded lights, keyed by Simply Light's item names.
+            // The items do not need to be installed: the pack's item.properties simply lists them, so the mod can
+            // pose as them to get a real blue / green / pink / ... light. Colours are Photon's own table values.
+            new Ref("simplylight:illuminant_block_on", 0xFFFFFF),
+            new Ref("simplylight:illuminant_red_block_on", 0xFF1A1A),
+            new Ref("simplylight:illuminant_orange_block_on", 0xFF731A),
+            new Ref("simplylight:illuminant_yellow_block_on", 0xFFF233),
+            new Ref("simplylight:illuminant_lime_block_on", 0x8CFF33),
+            new Ref("simplylight:illuminant_green_block_on", 0x26FF33),
+            new Ref("simplylight:illuminant_cyan_block_on", 0x26F2FF),
+            new Ref("simplylight:illuminant_light_blue_block_on", 0x73BFFF),
+            new Ref("simplylight:illuminant_blue_block_on", 0x264DFF),
+            new Ref("simplylight:illuminant_purple_block_on", 0x8C26FF),
+            new Ref("simplylight:illuminant_magenta_block_on", 0xFF33E6),
+            new Ref("simplylight:illuminant_pink_block_on", 0xFF8CD9));
 
     private LightPalette() {
     }

@@ -48,8 +48,16 @@ public final class TorchConfig {
     public boolean sendLightColor = true;
     /** For packs without colour support: pose as the pack-known item whose colour is closest. */
     public boolean pickNearestColorItem = true;
+    /** How to treat packs that read the item id as a colour (Rethinking Voxels). */
+    public IdColorMode rgbIdMode = IdColorMode.AUTO;
     /** Your own items. */
     public List<Entry> items = new ArrayList<>();
+
+    /**
+     * Rethinking Voxels reads the held item id as a 12-bit colour (4 bits each for red, green, blue).
+     * AUTO detects that by looking at the ids the pack gives to well-known items (torch = orange, ...).
+     */
+    public enum IdColorMode { AUTO, ON, OFF }
 
     public static TorchConfig get() {
         return current;
@@ -120,6 +128,9 @@ public final class TorchConfig {
 
     private void sanitize() {
         defaultLightLevel = Math.max(1, Math.min(15, defaultLightLevel));
+        if (rgbIdMode == null) {
+            rgbIdMode = IdColorMode.AUTO;
+        }
         List<Entry> clean = new ArrayList<>();
         if (items != null) {
             for (Entry e : items) {

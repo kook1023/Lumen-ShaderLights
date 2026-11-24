@@ -3,7 +3,7 @@
   "id": "shadertorches",
   "version": "${version}",
   "name": "Shader Torches",
-  "description": "Makes held \"torch\" items from any mod give off dynamic light in Iris shader packs - with a custom colour and intensity per item. Client-side only.",
+  "description": "Makes held \"torch\" items from any mod give off dynamic light in Iris shader packs, with a custom colour and intensity per item (exact colours on Rethinking Voxels). Client-side only.",
   "authors": [
     "Shader Torches contributors"
   ],

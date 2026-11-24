@@ -1,43 +1,44 @@
 # Shader Torches (Fabric 1.20.1)
 
-Makes held **torch-like items from any mod** give off dynamic light in **Iris** shader packs, with a **custom
-colour and intensity per item**. Client-side only - no server mod, no custom lighting engine. It feeds the shader's
-own handheld-light values.
+Makes held **torch-like items from any mod** give off dynamic light in **Iris** shader packs, with a **custom colour
+and intensity per item**. Client-side only. It feeds the shader's own handheld-light values.
+
+New to the code? Read **docs/HOW_IT_WORKS.md**. Want a shader pack to support this properly? Send its author
+**docs/FOR_SHADER_AUTHORS.md**.
 
 ## What it does
-- Any **non-vanilla** item whose id ends in `torch` (so `lantern_torch`, `somemod:torch`, ...) lights up. Toggle in config.
-- Add your own items, each with **intensity**, **colour** (hue + saturation sliders) and an optional **"pretend to be"** item.
-- Held light only (main hand / off-hand), same as vanilla shader packs.
-- Never touches vanilla items (Iris already handles those) and never *lowers* light an item already gives.
+- Any **non-vanilla** item whose id ends in `torch` lights up (toggle in config).
+- Your own items: **intensity**, **colour** (hue + saturation sliders with a live preview box) and an optional
+  **"Pretend to be"** item.
+- Held light only (main hand / off-hand). Never touches vanilla items, never *lowers* light an item already gives.
 
-## How colour reaches the shader
-Shader packs get handheld light colour in one of two ways, and the mod does both:
+## How colour reaches each shader pack
+| Pack (checked in its source) | What happens |
+|---|---|
+| **Rethinking Voxels** | Reads the item id *as a colour*. The mod detects this and sends your **exact colour** (16 steps per channel). Intensity dims the colour. |
+| **Complementary** (Reimagined/Unbound) | Colour table by item id. The mod poses as the item with the **closest colour**. Intensity works. |
+| **Photon** | Colour table by item id. **Closest colour**, now with real choices: recent Photon versions have 16 colour slots for modded lights (white, red, orange, yellow, lime, green, cyan, light blue, blue, purple, magenta, pink...), which the mod uses. Intensity is ignored by the pack when coloured lights are on. |
+| **Solas** | Colour table (ids 1-97). **Closest colour**. Intensity ignored by the pack. |
+| BSL / Bliss / Eclipse | Not inspected. Probably table-style: closest colour, or choose with "Pretend to be". |
 
-1. **`heldBlockLightColor`** - an Iris value holding the exact colour. Packs that read it show your exact colour
-   (the pack's "coloured lighting" option must be on). Controlled by *Send colour to shader*.
-2. **By item** - most packs colour handheld light per item (via `item.properties`). For those, the shader is told
-   the item is **whichever item the pack knows with the closest colour** (*Match closest item*), or the item you
-   chose under **Pretend to be**. If the pack knows none of them, it falls back to `minecraft:torch`.
-
-The built-in colours for the "closest item" search are typical values (e.g. torch = orange, soul torch = cyan);
-every pack defines its own, so it is a good guess, not exact. Run `/shadertorches status` to see which reference
-items your current pack knows.
+No stock pack I checked reads Iris' `heldBlockLightColor` yet. **Lumen: Shaders** (a tiny Photon fork, shipped separately) does, as a testing ground and a reference for shader authors. The mod checks the active pack's source for that name and
+switches to exact colours by itself if a pack ever does.
 
 ## Build
-Needs JDK 21 (or 17) to *run Gradle*; the mod itself targets Java 17.
+Needs JDK 21 (or 17) to *run Gradle*; the mod targets Java 17. Uses Loom 1.7.4 / Gradle 8.10.2.
 
     cd shader-torches
-    ./gradlew build        # jar -> build/libs/shadertorches-1.1.0.jar
+    ./gradlew build        # jar -> build/libs/shadertorches-1.2.1.jar
     ./gradlew runClient    # dev game with Cloth Config + Mod Menu
 
-Put the jar in `mods/` with Fabric API and Iris (+ Sodium). Mod Menu + Cloth Config are optional (they give you the
-in-game editor).
+Put the jar in `mods/` with Fabric API and Iris (+ Sodium). Mod Menu + Cloth Config are optional (in-game editor).
 
 ## Config
-**In game:** Mod Menu -> Shader Torches -> Configure, or `/shadertorches config`. On the **Light items** tab press **+**
-to add a row, **X** to remove one. Save applies **immediately** - no restart, no rejoin.
+**In game:** Mod Menu -> Shader Torches -> Configure, or `/shaderlights config` (General tab) /
+`/shaderlights config2` (Light items tab). On **Light items** press **+** to add a row, **X** to remove one. Save
+applies **immediately**.
 
-**By file:** `config/shadertorches.json`, then `/shadertorches reload` (or just rejoin the world).
+**By file:** `config/shadertorches.json`, then `/shaderlights reload` (or rejoin the world).
 
     {
       "enabled": true,
@@ -46,6 +47,7 @@ to add a row, **X** to remove one. Save applies **immediately** - no restart, no
       "spoofTorchItemId": true,
       "sendLightColor": true,
       "pickNearestColorItem": true,
+      "rgbIdMode": "AUTO",
       "items": [
         { "id": "examplemod:blue_torch", "level": 14, "color": "#3399FF", "pretendToBe": "" },
         { "id": "examplemod:*_lamp",     "level": 12, "color": "",        "pretendToBe": "minecraft:sea_lantern" }
@@ -56,30 +58,29 @@ to add a row, **X** to remove one. Save applies **immediately** - no restart, no
 - `level`: intensity 0-15 (raises light only; `0` = leave the item alone).
 - `color`: `#RRGGBB`, or `""` to let the pack decide.
 - `pretendToBe`: any item id, or `""` for automatic.
+- `rgbIdMode`: `AUTO`, `ON` or `OFF` (see Rethinking Voxels above).
 
-## Commands (client-side)
-- `/shadertorches addheld` - add the item in your main hand (applies instantly)
-- `/shadertorches reload` - re-read the JSON
-- `/shadertorches status` - Iris hook state, which reference items the pack knows, what your held items resolve to
-- `/shadertorches config` - open the config screen
+## Commands (client-side; `/shadertorches` and `/shaderlights` are the same)
+- `addheld` - add the item in your main hand (applies instantly)
+- `reload` - re-read the JSON
+- `config` / `config2` - open the config screen (General tab / Light items tab)
+- `status` - Iris hook state, how the current pack takes colours, which items it knows, and **exactly what was sent
+  to the shader** for each hand
 
 ## GitHub
-`.github/workflows/build.yml` sits next to this folder (repo root). It builds on every push / PR and uploads the jar as
-an artifact; pushing a tag like `v1.1.0` also publishes a Release.
-
-    repo/
-    |- .github/workflows/build.yml
-    '- shader-torches/          <- this folder
+`.github/workflows/build.yml` (next to this folder, at the repo root) builds on every push / PR and uploads the jar;
+pushing a tag like `v1.2.0` also publishes a Release. Adjust `working-directory` and the artifact paths if your
+folder is named differently.
 
 ## Troubleshooting
-Run `/shadertorches status` with a shader pack enabled.
-- `Iris hook: waiting` -> no shader pack has run yet; enable one (and make sure Iris is installed).
-- `Iris hook: FAILED (...)` -> your Iris build is laid out differently from what this expects; see `latest.log`.
-- `active` but no light -> that pack may not use handheld light, or has it disabled in its own settings.
-- Light works but colour doesn't -> the pack neither reads `heldBlockLightColor` nor knows any reference item
-  (`Pack knows: none`). Pick a "Pretend to be" item the pack uses, or use a pack with coloured handheld light.
+Run `/shaderlights status` holding the item, with a pack enabled.
+- `Iris hook: waiting` -> no pack has run yet; enable one.
+- `Iris hook: FAILED (...)` -> your Iris build is laid out differently; see `latest.log`.
+- `Sent to shader: main: id=-1 light=0` -> the mod did not match the item (check the id / config).
+- `id` and `light` look right but no light -> the pack is not using them (its own handheld-light setting may be off).
+- Colour is wrong but light works -> the pack only offers table colours. Pick a better one under "Pretend to be".
 
 ## Notes
 - **OptiFine** is not supported (it does not run on Fabric 1.20.1). Iris loads the same shader packs.
-- The Iris hook is a mixin on `IdMapUniforms$HeldItemSupplier.update()` (both the `net.irisshaders` and the older
-  `net.coderbot` package names are covered), reading Iris' private fields reflectively so it fails soft.
+- The Iris hook is a mixin on `IdMapUniforms$HeldItemSupplier.update()` (both package names are covered) that reads
+  Iris' private fields by reflection, so it fails soft.

@@ -16,6 +16,7 @@ import net.minecraft.network.chat.Style;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
@@ -37,12 +38,34 @@ public final class ClothConfigScreen {
         AbstractConfigListEntry<Boolean> useColor;
         AbstractConfigListEntry<Integer> hue;
         AbstractConfigListEntry<Integer> saturation;
+        ColorPreviewEntry preview;
         AbstractConfigListEntry<String> pretend;
         int originalHue;
         int originalSaturation;
 
         Row(TorchConfig.Entry data) {
             this.data = data;
+        }
+
+        /** The colour as stored (full brightness), from the current slider positions. */
+        int storedRgb() {
+            return Colors.hsvToRgb(hue.getValue() / 360f, saturation.getValue() / 100f, 1f);
+        }
+
+        /** What the preview box shows: hue + saturation + intensity (as brightness). -1 = no custom colour. */
+        int previewRgb() {
+            if (!useColor.getValue()) {
+                return -1;
+            }
+            float brightness = Math.max(0.15f, level.getValue() / 15f);
+            return Colors.hsvToRgb(hue.getValue() / 360f, saturation.getValue() / 100f, brightness);
+        }
+
+        Component previewCaption() {
+            if (!useColor.getValue()) {
+                return Component.translatable(KEY + "item.preview.pack");
+            }
+            return Component.literal(Colors.toHex(storedRgb()) + "  |  " + level.getValue() + "/15");
         }
 
         /** Reads the widgets back into a fresh entry. */
@@ -54,9 +77,7 @@ public final class ClothConfigScreen {
             if (useColor.getValue()) {
                 boolean moved = hue.getValue() != originalHue || saturation.getValue() != originalSaturation;
                 // Untouched sliders keep the exact hex from the file (the sliders are only whole degrees/percent).
-                e.color = (moved || Colors.parseHex(data.color) < 0)
-                        ? Colors.toHex(Colors.hsvToRgb(hue.getValue() / 360f, saturation.getValue() / 100f, 1f))
-                        : data.color;
+                e.color = (moved || Colors.parseHex(data.color) < 0) ? Colors.toHex(storedRgb()) : data.color;
             } else {
                 e.color = "";
             }
@@ -64,7 +85,8 @@ public final class ClothConfigScreen {
         }
     }
 
-    public static Screen create(Screen parent) {
+    /** @param openItemsTab true = start on the "Light items" tab (used by /shaderlights config2) */
+    public static Screen create(Screen parent, boolean openItemsTab) {
         TorchConfig current = TorchConfig.get();
 
         ConfigBuilder builder = ConfigBuilder.create()
@@ -112,6 +134,14 @@ public final class ClothConfigScreen {
                 .setSaveConsumer(v -> TorchConfig.get().pickNearestColorItem = v)
                 .build());
 
+        general.addEntry(eb.startEnumSelector(Component.translatable(KEY + "rgb_id_mode"),
+                        TorchConfig.IdColorMode.class, current.rgbIdMode)
+                .setDefaultValue(TorchConfig.IdColorMode.AUTO)
+                .setEnumNameProvider(mode -> Component.translatable(KEY + "rgb_id_mode." + mode.name().toLowerCase(Locale.ROOT)))
+                .setTooltip(Component.translatable(KEY + "rgb_id_mode.tooltip"))
+                .setSaveConsumer(v -> TorchConfig.get().rgbIdMode = v)
+                .build());
+
         // ---------------------------------------------------------------- Items tab
         ConfigCategory items = builder.getOrCreateCategory(Component.translatable(KEY + "category.items"));
         items.addEntry(eb.startTextDescription(Component.translatable(KEY + "items.help")).build());
@@ -132,6 +162,7 @@ public final class ClothConfigScreen {
                     inner.add(row.useColor);
                     inner.add(row.hue);
                     inner.add(row.saturation);
+                    inner.add(row.preview);
                     inner.add(row.pretend);
                     Component title = row.data.id.isBlank()
                             ? Component.translatable(KEY + "item.new")
@@ -158,6 +189,9 @@ public final class ClothConfigScreen {
                 newCell);
         items.addEntry(itemList);
 
+        if (openItemsTab) {
+            builder.setFallbackCategory(items);   // the tab Cloth opens on
+        }
         return builder.build();
     }
 
@@ -189,7 +223,7 @@ public final class ClothConfigScreen {
                 .setTooltip(Component.translatable(KEY + "item.use_color.tooltip"))
                 .build();
 
-        // The hue label is drawn in the hue's own colour, so it doubles as a little preview.
+        // The hue label is drawn in the hue's own colour (a mini preview); the box below shows hue + saturation + intensity.
         row.hue = eb.startIntSlider(Component.translatable(KEY + "item.hue"), row.originalHue, 0, 360)
                 .setDefaultValue(30)
                 .setTooltip(Component.translatable(KEY + "item.hue.tooltip"))
@@ -202,6 +236,8 @@ public final class ClothConfigScreen {
                 .setTooltip(Component.translatable(KEY + "item.saturation.tooltip"))
                 .setTextGetter(v -> Component.translatable(KEY + "item.saturation.value", v))
                 .build();
+
+        row.preview = new ColorPreviewEntry(Component.translatable(KEY + "item.preview"), row::previewRgb, row::previewCaption);
 
         row.pretend = eb.startStringDropdownMenu(Component.translatable(KEY + "item.pretend"), d.pretendToBe)
                 .setSelections(LightPalette.ids())

@@ -8,6 +8,6 @@ import dev.shadertorches.config.gui.ConfigScreens;
 public final class ModMenuIntegration implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return ConfigScreens::create;
+        return parent -> ConfigScreens.create(parent, false);
     }
 }
