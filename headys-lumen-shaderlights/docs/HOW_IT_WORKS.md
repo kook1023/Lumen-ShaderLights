@@ -53,18 +53,34 @@ modded torches it detects, and every item in your list (vanilla ones included, e
 Why one supplier per hand? Iris has two `HeldItemSupplier` objects, one for the main hand, one for the off-hand.
 `update()` runs for both. Our hook sees which hand it is by reading the supplier's `hand` field.
 
+**The second hook: how an item is drawn.** Some packs (current Rethinking Voxels releases) ignore `heldItemId` and
+instead turn the rendered hand into voxels: the held item glows if its *drawn* material is a light. Iris tells the
+shader that material through another value, `currentRenderedItemId`, set each time an item is drawn (from
+`block.properties` for block items such as torches, `item.properties` otherwise). So:
+
+    Minecraft: ItemRenderer.render(item)
+      |-- Iris (start of render): currentRenderedItemId = the pack's id for this item (0 / -1 if unknown)
+      |-- ItemRendererMixin (first pushPose, i.e. after Iris): RenderedItemBridge.beforeRender(item)
+      |      -> for your items: the id of the vanilla light it poses as (Pretend to be > closest colour > torch),
+      |         or 0 for intensity-0 items
+      '-- end of render: RenderedItemBridge.afterRender() puts 0 back, like Iris does
+
+Setting: "Also change how the item is drawn" (`matchRenderedItem`). Side effect: your item also *looks* like
+that vanilla light to the pack wherever it is drawn (in hand, dropped, in item frames).
+
 ---------------------------------------------------------------------------------------------------------------------
 
 ## 3. What each shader pack actually does (from reading their source)
 
-Checked against the packs' public source on GitHub (Photon `2a3d502`, Rethinking Voxels `1fd788f`, Complementary
-Reimagined `e10d27d`, Solas `2ebf0cf`). Other versions may differ.
+Checked against the packs' public source on GitHub (Photon `2a3d502`, Rethinking Voxels `main` `1fd788f` and
+`singlesample-softshadows-v2` `d76c831`, Complementary Reimagined `e10d27d`, Solas `2ebf0cf`). Other versions may differ.
 
 | Pack | Brightness of the held light | Colour of the held light | Where (in `shaders/`) |
 |------|------------------------------|--------------------------|-----------------------|
 | **Heady's Lumen: ShaderPack_PhotonFork** | the light level sets brightness **and** reach (for items outside Photon's table) | `heldBlockLightColor` when it is set; otherwise Photon's table | `include/lighting/handheld_lighting.glsl` |
 | **Photon** | with coloured lights **on**: fixed per table entry, light level unused. Off: the light level | `heldItemId` 10032-10079 -> colour table. 10064-10079 are 16 colour slots for modded lights, listed under `simplylight:*` and `luminax:*` item names. Any other id: **no light** while coloured lights are on | `include/lighting/handheld_lighting.glsl`, colours in `include/lighting/lpv/light_colors.glsl` |
-| **Rethinking Voxels** | its coloured held light has a fixed brightness (`10 x HELD_LIGHTING_MODE`); the light level is only used by its ordinary lighting | **the item id itself**, for ids 1-9999: `R = id % 16`, `G = (id >> 4) % 16`, `B = (id >> 8) % 16` (each x16). Any other id (e.g. `-1` for a modded item): no coloured held light | `program/prepare7_fsh.glsl` |
+| **Rethinking Voxels**, current releases (Complementary-style ids: torch = 44002) | from the light's material; the light level is not used | the hand is voxelized and glows if the **drawn** item's material (`currentRenderedItemId`) is a light; colour from that material. `heldItemId` is not used for this. Needs the pack's Dynamic Handheld Lighting | `program/shadow.glsl` |
+| **Rethinking Voxels**, GitHub `main` (colour-coded ids: torch = 927) | its coloured held light has a fixed brightness (`10 x HELD_LIGHTING_MODE`); the light level is only used by its ordinary lighting | **the item id itself**, for ids 1-9999: `R = id % 16`, `G = (id >> 4) % 16`, `B = (id >> 8) % 16` (each x16). Any other id (e.g. `-1` for a modded item): no coloured held light | `program/prepare7_fsh.glsl` |
 | **Complementary Reimagined** | `heldBlockLightValue` | with coloured lighting on: `heldItemId - 44000` -> colour table | `lib/lighting/heldLighting.glsl` |
 | **Solas** | fixed (`DYNAMIC_HANDLIGHT_STRENGTH`); the light level is not read | `heldItemId` 1-97 -> colour table. Any other id: **no held light at all** | `lib/lighting/handlight.glsl` |
 
@@ -142,10 +158,12 @@ text, on a background thread.
     |-- iris/
     |   |-- IrisBridge.java              THE HEART. Everything that touches Iris' numbers
     |   |-- RgbId.java                   encode/decode the Rethinking Voxels colour-in-id format
-    |   '-- PackScanner.java             checks whether the active pack mentions heldBlockLightColor
+    |   |-- PackScanner.java             checks whether the active pack mentions heldBlockLightColor
+    |   '-- RenderedItemBridge.java      the second hook: changes how your items are drawn (currentRenderedItemId)
     '-- mixin/
         |-- IrisHeldItemSupplierMixin.java         hooks Iris (new package name)
-        '-- LegacyIrisHeldItemSupplierMixin.java   hooks Iris (old package name)
+        |-- LegacyIrisHeldItemSupplierMixin.java   hooks Iris (old package name)
+        '-- ItemRendererMixin.java                 hooks Minecraft's item renderer (for RenderedItemBridge)
 
     src/main/resources/
     |-- fabric.mod.json                  mod id, dependencies, entry points

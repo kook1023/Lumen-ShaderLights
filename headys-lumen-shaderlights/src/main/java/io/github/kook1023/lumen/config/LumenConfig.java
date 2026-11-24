@@ -48,6 +48,11 @@ public final class LumenConfig {
     public boolean sendLightColor = true;
     /** For packs without colour support: pose as the pack-known item whose colour is closest. */
     public boolean pickNearestColorItem = true;
+    /**
+     * Also change how your items are DRAWN (Iris' currentRenderedItemId), for packs that light the hand from the
+     * rendered item itself, such as current Rethinking Voxels releases.
+     */
+    public boolean matchRenderedItem = true;
     /** How to treat packs that read the item id as a colour (Rethinking Voxels). */
     public IdColorMode rgbIdMode = IdColorMode.AUTO;
     /** Your own items. */

@@ -43,5 +43,7 @@
   "headys_lumen.config.rgb_id_mode.off": "Off",
   "headys_lumen.config.rgb_id_mode.tooltip": "Rethinking Voxels reads the item id as a colour, so the mod can send your EXACT colour (16 steps per channel) by choosing the id. Auto-detect checks the pack's ids for torch / soul torch / redstone torch. Use 'Always on' if detection misses your pack.",
   "headys_lumen.config.item.preview": "Preview",
-  "headys_lumen.config.item.preview.pack": "Pack decides the colour"
+  "headys_lumen.config.item.preview.pack": "Pack decides the colour",
+  "headys_lumen.config.match_rendered": "Also change how the item is drawn",
+  "headys_lumen.config.match_rendered.tooltip": "Some packs (such as current Rethinking Voxels releases) only light the hand when the item being DRAWN looks like a light source. With this on, your items are drawn as the vanilla light they pose as (your \"Pretend to be\", else the closest colour, else a torch). Turn it off if a pack makes your items look wrong."
 }

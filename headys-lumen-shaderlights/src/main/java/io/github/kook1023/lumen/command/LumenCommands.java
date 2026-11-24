@@ -6,6 +6,7 @@ import io.github.kook1023.lumen.config.LumenConfig;
 import io.github.kook1023.lumen.config.LightMatcher;
 import io.github.kook1023.lumen.config.gui.ConfigScreens;
 import io.github.kook1023.lumen.iris.IrisBridge;
+import io.github.kook1023.lumen.iris.RenderedItemBridge;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
@@ -99,6 +100,7 @@ public final class LumenCommands {
                     + " -> light level " + LightMatcher.matchFor(stack).level()));
         }
         src.sendFeedback(Component.literal("Sent to shader: " + IrisBridge.describeSent()));
+        src.sendFeedback(Component.literal("Item look: " + RenderedItemBridge.describe()));
         return 1;
     }
 

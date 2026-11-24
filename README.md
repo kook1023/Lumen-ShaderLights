@@ -21,7 +21,8 @@ intensity (see below).
 | Pack | What happens |
 |---|---|
 | **Heady's Lumen: ShaderPack_PhotonFork** | Reads Iris' `heldBlockLightColor`: your **exact colour**, and intensity sets brightness **and** reach. |
-| **Rethinking Voxels** | Reads the item id *as a colour*: the mod sends your **exact colour** (16 steps per channel). Intensity dims the colour. |
+| **Rethinking Voxels** (current releases) | Lights the hand from how the held item is **drawn**: the mod draws your item as the vanilla light with the **closest colour** (or your "Pretend to be"). The pack ignores intensity. Needs the pack's Dynamic Handheld Lighting on. |
+| **Rethinking Voxels** (GitHub `main` branch) | Reads the item id *as a colour*: the mod sends your **exact colour** (16 steps per channel). Intensity dims the colour. |
 | **Complementary Reimagined** | Colour table by item id: the mod picks the item with the **closest colour**. Intensity works. |
 | **Photon** | Colour table: **closest colour**, including Photon's 16 colour slots for modded lights. The pack ignores intensity when coloured lights are on. |
 | **Solas** | Colour table: **closest colour**. The pack ignores intensity. |
@@ -65,7 +66,7 @@ artifact, and pushing a tag like `v1.3.0` publishes it as a Release.
 | `/lumen config 2` | open it on the **Light items** tab |
 | `/lumen addheld` | add the item in your main hand to your list (works instantly) |
 | `/lumen reload` | re-read the config file |
-| `/lumen status` | Iris hook state, how the current pack takes colours, **what the pack knows**, **your items** (listed separately), and exactly what was sent to the shader |
+| `/lumen status` | Iris hook state, how the current pack takes colours, **what the pack knows**, **your items** (listed separately), exactly what was sent to the shader, and how your item was last drawn ("Item look") |
 
 ## Config
 **In game:** Mod Menu -> Heady's Lumen: ShaderLights -> Configure, or `/lumen config`. On **Light items** press **+**
@@ -81,6 +82,7 @@ to add a row and **X** to remove one. Saving applies immediately.
       "sendLightColor": true,
       "pickNearestColorItem": true,
       "rgbIdMode": "AUTO",
+      "matchRenderedItem": true,
       "items": [
         { "id": "minecraft:torch",       "level": 14, "color": "#FF8CD9", "pretendToBe": "" },
         { "id": "examplemod:blue_torch", "level": 12, "color": "#3399FF", "pretendToBe": "" },
@@ -93,6 +95,7 @@ to add a row and **X** to remove one. Saving applies immediately.
 - `color`: `#RRGGBB`, or `""` to let the pack decide.
 - `pretendToBe`: any item id, or `""` for automatic.
 - `rgbIdMode`: `AUTO`, `ON` or `OFF` (the Rethinking Voxels colour-in-id trick).
+- `matchRenderedItem`: also change how your items are drawn (needed for current Rethinking Voxels releases).
 
 ## Heady's Lumen: ShaderPack_PhotonFork
 A fork of **Photon** by SixthSurge with one changed file (`shaders/include/lighting/handheld_lighting.glsl`) and
@@ -125,5 +128,6 @@ Run `/lumen status` with a shader pack enabled while holding the item.
 ## Notes
 - **OptiFine** is not supported (it does not run on Fabric 1.20.1). Iris loads the same shader packs.
 - Mod id `headys_lumen`, config file `config/headys_lumen.json`, Java package `io.github.kook1023.lumen`.
-- The Iris hook is a mixin on `IdMapUniforms$HeldItemSupplier.update()` that reads Iris' private fields by reflection,
-  so if Iris changes it switches itself off instead of crashing.
+- The mod hooks Iris in two places: `IdMapUniforms$HeldItemSupplier.update()` (the held-item values) and Minecraft's
+  item renderer (how an item is drawn, Iris' `currentRenderedItemId`). Iris is reached by reflection, so if Iris
+  changes, the affected hook switches itself off instead of crashing.

@@ -135,6 +135,12 @@ public final class ClothConfigScreen {
                 .setSaveConsumer(v -> LumenConfig.get().pickNearestColorItem = v)
                 .build());
 
+        general.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "match_rendered"), current.matchRenderedItem)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable(KEY + "match_rendered.tooltip"))
+                .setSaveConsumer(v -> LumenConfig.get().matchRenderedItem = v)
+                .build());
+
         general.addEntry(eb.startEnumSelector(Component.translatable(KEY + "rgb_id_mode"),
                         LumenConfig.IdColorMode.class, current.rgbIdMode)
                 .setDefaultValue(LumenConfig.IdColorMode.AUTO)

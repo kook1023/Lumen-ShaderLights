@@ -71,6 +71,10 @@ So you can check your logic against real input. "Colour" is `heldBlockLightColor
 | Modded item ending in `torch`, auto-detected, no colour | your `minecraft:torch` id | 14 (default) | white |
 | Anything else | untouched (normal Iris behaviour) | untouched | untouched |
 
+Separately, while one of these items is **drawn**, the mod sets `currentRenderedItemId` to the id your pack uses for
+the vanilla light it poses as (or `0` for intensity 0). That is for packs that light the hand from the rendered
+item's material rather than from `heldItemId`.
+
 The id is cleared in the first row as a courtesy for packs that check the id first. Packs that follow the rule in
 section 2 get the right result either way.
 
