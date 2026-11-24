@@ -1,6 +1,6 @@
 # Heady's Lumen: ShaderLights
 
-By **Heady**. A client-side Fabric mod for **Minecraft 1.20.1** that makes held **torch-like items from any mod**, and any vanilla
+By **Headypeace**. A client-side Fabric mod for **Minecraft 1.20.1** that makes held **torch-like items from any mod**, and any vanilla
 item you choose, give off **dynamic light in Iris shader packs**. Each item can get its own **colour** and
 **intensity**. Nothing runs on the server and nothing changes Minecraft's own lighting: the mod only adjusts the
 handheld-light values Iris passes to the shader pack.
@@ -20,7 +20,7 @@ intensity (see below).
 ## How the colour reaches each shader pack
 | Pack | What happens |
 |---|---|
-| **Heady's Lumen: ShaderPack_PhotonFork** | Reads Iris' `heldBlockLightColor`: your **exact colour**, and intensity sets brightness **and** reach. |
+| **Heady's Lumen: ShaderPack_PhotonFork (unreleased)** | Reads Iris' `heldBlockLightColor`: your **exact colour**, and intensity sets brightness **and** reach. |
 | **Rethinking Voxels** | Reads the item id *as a colour*: the mod sends your **exact colour** (16 steps per channel). Intensity dims the colour. |
 | **Complementary** (Reimagined/Unbound) | Colour table by item id: the mod picks the item with the **closest colour**. Intensity works. |
 | **Photon** | Colour table: **closest colour**, including Photon's 16 colour slots for modded lights. The pack ignores intensity when coloured lights are on. |
