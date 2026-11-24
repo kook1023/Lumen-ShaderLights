@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "headys_lumen",
+  "version": "${version}",
+  "name": "Heady's Lumen: ShaderLights",
+  "description": "Makes held \"torch\" items from any mod - and any vanilla item you choose - give off dynamic light in Iris shader packs, with a custom colour and intensity per item. Client-side only. Command: /lumen",
+  "authors": [
+    "Heady"
+  ],
+  "contributors": [
+    "Claude (AI assistant by Anthropic)"
+  ],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "io.github.kook1023.lumen.LumenShaderLights"
+    ],
+    "modmenu": [
+      "io.github.kook1023.lumen.compat.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "headys_lumen.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.21",
+    "minecraft": "1.20.1",
+    "java": ">=17",
+    "fabric-api": "*"
+  },
+  "recommends": {
+    "iris": "*"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "cloth-config": "*"
+  },
+  "contact": {
+    "sources": "https://github.com/kook1023/Lumen-ShaderLights",
+    "issues": "https://github.com/kook1023/Lumen-ShaderLights/issues"
+  }
+}

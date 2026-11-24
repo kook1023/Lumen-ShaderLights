@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "io.github.kook1023.lumen.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "IrisHeldItemSupplierMixin",
+    "LegacyIrisHeldItemSupplierMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}
