@@ -66,11 +66,11 @@ optional; they give you the in-game editor.
 Needs JDK 21 (or 17) to run Gradle; the mod targets Java 17. Uses Loom 1.7.4 / Gradle 8.10.2.
 
     cd headys-lumen-shaderlights
-    ./gradlew build        # jar -> headys-lumen-shaderlights/build/libs/headys-lumen-shaderlights-1.3.0.jar
+    ./gradlew build        # jar -> headys-lumen-shaderlights/build/libs/headys-lumen-shaderlights-1.5.0.jar
     ./gradlew runClient    # test game with Cloth Config + Mod Menu
 
 GitHub builds it automatically too (`.github/workflows/build.yml`): every push and pull request uploads the jar as an
-artifact, and pushing a tag like `v1.3.0` publishes it as a Release.
+artifact, and pushing a tag like `v1.5.0` publishes it as a Release.
 
 ## Commands (client-side)
 | Command | Does |
@@ -160,7 +160,8 @@ permission, and you may not charge for it.
 - The companion shader pack is based on **Photon** by SixthSurge.
 
 ## Troubleshooting
-Run `/lumen status` with a shader pack enabled while holding the item.
+Run `/lumen status` with a shader pack enabled while holding the item. Its first line shows the mod version, so you
+can check the jar you just built is the one running (also visible in Mod Menu).
 - `Iris hook: waiting` -> no pack has run yet; enable one.
 - `Iris hook: FAILED (...)` -> your Iris version is laid out differently; check `logs/latest.log` for `Lumen ShaderLights`.
 - `Sent to shader: ... light=0` -> the item did not match (check its id under "Your items"). `id=-1` with a light

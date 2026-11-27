@@ -103,7 +103,10 @@ public final class LumenCommands {
 
     private static int status(FabricClientCommandSource src) {
         LumenConfig cfg = LumenConfig.get();
-        src.sendFeedback(Component.literal(PREFIX + (cfg.enabled ? "enabled" : "disabled")));
+        // The version first, so it is clear which jar is running
+        String version = net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer("headys_lumen")
+                .map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("?");
+        src.sendFeedback(Component.literal(PREFIX + "version " + version + ", " + (cfg.enabled ? "enabled" : "disabled")));
         src.sendFeedback(Component.literal("Iris hook: " + IrisBridge.describeHook()));
         src.sendFeedback(Component.literal("Pack mode: " + IrisBridge.describePackMode()));
 
