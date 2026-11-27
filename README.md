@@ -5,8 +5,8 @@ item you choose, give off **dynamic light in Iris shader packs**. Each item can 
 **intensity**. Nothing runs on the server and nothing changes Minecraft's own lighting: the mod only adjusts the
 handheld-light values Iris passes to the shader pack.
 
-Companion shader pack: **Heady's Lumen: ShaderPack_PhotonFork**, a small Photon fork that shows the exact colour and
-intensity (see below).
+Companion shader pack: **Heady's Lumen: ShaderPack_PhotonFork**, a small Photon fork that shows the exact colour,
+intensity and flicker, held and placed. Download it from the [`shaderpack`](shaderpack) folder (see below).
 
 ## What it does
 - **Modded torches and lanterns light up automatically** (toggle in the config), each as its vanilla counterpart:
@@ -49,6 +49,7 @@ Details per pack: `docs/HOW_IT_WORKS.md`.
     |- .github/workflows/build.yml      builds the jar on every push
     |- README.md                        this file
     |- LICENSE                          MIT (covers the mod)
+    |- shaderpack/                      the companion shader pack (zip, under Photon's license, not MIT)
     '- headys-lumen-shaderlights/       the mod's Gradle project
        |- src/main/java/...             code (package io.github.kook1023.lumen)
        |- src/main/resources/...        fabric.mod.json, mixins, language file
@@ -144,13 +145,19 @@ applies immediately.
   off). `defaultFlickerSpeed` / `defaultFlickerStrength` are used for every light that flickers because of these.
 
 ## Heady's Lumen: ShaderPack_PhotonFork
-A fork of **Photon** by SixthSurge with one changed file (`shaders/include/lighting/handheld_lighting.glsl`) and
-**coloured lights switched on by default**. It reads Iris' `heldBlockLightColor`, so modded and recoloured items show
-the exact colour you pick, and their intensity controls brightness and reach. Items Photon already knows look exactly
-like in Photon.
+A fork of **Photon** by SixthSurge with **coloured lights switched on by default**, made to show everything the mod
+can do:
+- **In your hand:** it reads Iris' `heldBlockLightColor`, so modded and recoloured items show the exact colour you
+  pick, and their intensity controls brightness and reach. Items Photon already knows look exactly like in Photon,
+  and they flicker too.
+- **Placed:** it reads the mod's light table, so placed lights show your exact colour and brightness and flicker like
+  a flame. The pack animates the flicker, so it costs no extra performance.
 
-Drop the zip into `.minecraft/shaderpacks`. The file is called `Heady's Lumen - ShaderPack_PhotonFork.zip` because
-file names cannot contain `:`.
+**Download:** [`shaderpack/Heady's Lumen - ShaderPack_PhotonFork.zip`](shaderpack) and drop it into
+`.minecraft/shaderpacks`. The file is called `Heady's Lumen - ShaderPack_PhotonFork.zip` because file names cannot
+contain `:`. Use it with the mod version it was made for (1.5.0 or newer); with an older mod, placed lights fall back
+to plain torch light. Every change against Photon is marked `LUMEN` in the code and listed in the README inside the
+zip.
 
 **Sharing:** it contains Photon's code, so Photon's license applies (included in the zip). You may share it for free
 (GitHub, Discord, direct download). You may **not** upload it to Modrinth or CurseForge without SixthSurge's written
