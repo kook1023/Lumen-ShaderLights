@@ -72,6 +72,42 @@ public final class PackScanner {
         return r ? "YES - exact colours are used (no item-id tricks for coloured items)" : "no";
     }
 
+    private static volatile String markerCheckedFor;
+    private static volatile boolean markerFound;
+
+    /**
+     * Does the active pack contain {@code shaders/lumen.properties}? That file marks packs (the PhotonFork) that
+     * understand colour-coded light ids for placed blocks. Checked synchronously and cached per pack, because it is
+     * needed while Iris loads the pack.
+     */
+    public static boolean packUnderstandsColorIds() {
+        String name = currentPackName();
+        if (name == null) {
+            return false;
+        }
+        if (name.equals(markerCheckedFor)) {
+            return markerFound;
+        }
+        boolean found = false;
+        try {
+            Class<?> iris = findIrisClass();
+            Path dir = iris == null ? null : (Path) iris.getMethod("getShaderpacksDirectory").invoke(null);
+            Path pack = dir == null ? null : dir.resolve(name);
+            if (pack != null && Files.isDirectory(pack)) {
+                found = Files.exists(pack.resolve("shaders").resolve("lumen.properties"));
+            } else if (pack != null && Files.isRegularFile(pack)) {
+                try (FileSystem zip = FileSystems.newFileSystem(pack)) {
+                    found = Files.exists(zip.getPath("/shaders/lumen.properties"));
+                }
+            }
+        } catch (Exception | LinkageError e) {
+            found = false;
+        }
+        markerFound = found;
+        markerCheckedFor = name;
+        return found;
+    }
+
     private static String currentPackName() {
         try {
             Class<?> iris = findIrisClass();

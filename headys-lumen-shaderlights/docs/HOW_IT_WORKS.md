@@ -73,8 +73,15 @@ as a solid cube. When Iris loads a pack it stores that map with `WorldRenderingS
 under the id of the vanilla block it poses as. A block is matched through the item that places it, so a wall torch
 follows its torch's entry, and becomes the vanilla *wall* torch, with its facing (and `lit`, `hanging`,
 `waterlogged`) copied over. Saving rebuilds the copy from the pack's original map and reloads the chunks (like
-F3+A), so already placed blocks update; nothing reloads if the result did not change. Intensity cannot apply to
-placed blocks: their brightness is the block's own light level.
+F3+A), so already placed blocks update; nothing reloads if the result did not change. In a normal pack intensity
+cannot apply to placed blocks: their brightness is the block's own light level.
+
+**Exact colour for placed blocks (PhotonFork).** A pack that contains `shaders/lumen.properties` says it understands
+colour-coded ids (`PackScanner.packUnderstandsColorIds`, checked once per pack while Iris loads it). For such a pack,
+a placed block whose entry has a colour gets the id `10000 + 1024 + code` instead of a vanilla light's id, where
+`code = hue (6 bits) | saturation << 6 (3 bits) | intensity << 9 (4 bits)` (`PlacedColorId`). The pack renders the
+block like a torch and lights its light volume with that colour, at its torch brightness times intensity / 14.
+Colour brightness (the V of HSV) is not stored; 64 hues x 8 saturations is close to, not exactly, your colour.
 
 Setting: "Also change how the item is drawn" (`matchRenderedItem`). Side effect: your item also *looks* like
 that vanilla light to the pack wherever it is drawn (in hand, dropped, in item frames).

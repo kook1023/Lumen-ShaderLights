@@ -50,6 +50,7 @@ public final class PlacedLights {
     private static volatile Object2IntMap<BlockState> original;   // the pack's own map, as Iris gave it
     private static volatile Object2IntMap<BlockState> lastAugmented;
     private static volatile int lastAdded;
+    private static volatile int lastCoded;
     private static volatile String failure;
 
     private PlacedLights() {
@@ -112,13 +113,16 @@ public final class PlacedLights {
         out.defaultReturnValue(pack.defaultReturnValue());
         LumenConfig cfg = LumenConfig.get();
         int added = 0;
+        codedCount = 0;
         if (cfg.enabled && cfg.placedLights) {
             List<Ref> refs = knownRefs(pack);
+            boolean colorIds = PackScanner.packUnderstandsColorIds();
             for (Block block : BuiltInRegistries.BLOCK) {
-                added += addBlock(block, pack, out, refs, cfg);
+                added += addBlock(block, pack, out, refs, cfg, colorIds);
             }
         }
         lastAdded = added;
+        lastCoded = codedCount;
         LumenShaderLights.LOGGER.info("Placed lights: {} block states given a light id", added);
         return out;
     }
@@ -138,8 +142,10 @@ public final class PlacedLights {
         return refs;
     }
 
+    private static int codedCount;
+
     private static int addBlock(Block block, Object2IntMap<BlockState> pack, Object2IntMap<BlockState> out,
-                                List<Ref> refs, LumenConfig cfg) {
+                                List<Ref> refs, LumenConfig cfg, boolean colorIds) {
         Item item = block.asItem();
         if (item == null || item == Items.AIR) {
             return 0;
@@ -180,6 +186,11 @@ public final class PlacedLights {
             // id -1: the pack has no id for that exact state, e.g. it lists only "redstone_torch:lit=true",
             // so an unlit modded state stays as it was
             if (id >= 0) {
+                if (colorIds && m.color() != null) {
+                    // The pack (PhotonFork) understands colour-coded ids: exact colour and intensity
+                    id = PlacedColorId.encode(m.color(), m.level());
+                    codedCount++;
+                }
                 out.put(state, id);
                 added++;
             }
@@ -267,6 +278,7 @@ public final class PlacedLights {
         if (original == null) {
             return "waiting for a shader pack";
         }
-        return lastAdded + " block states use a vanilla light's id";
+        return lastAdded + " block states use a vanilla light's id"
+                + (lastCoded > 0 ? " (" + lastCoded + " with your exact colour)" : "");
     }
 }

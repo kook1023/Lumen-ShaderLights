@@ -18,7 +18,8 @@ intensity (see below).
   shader pack's own torch colour.
 - Intensity in your list is used exactly (it can also dim); auto-detected torches only ever get brighter.
 - **Placed lights**: placed modded torches and lanterns glow like the vanilla light they act as, by the same rules
-  (your list, then auto-detect). Colours come from the pack's own table; the brightness is the block's own. It
+  (your list, then auto-detect). Colours come from the pack's own table; the brightness is the block's own. With
+  the PhotonFork, placed lights with a colour in your list show that exact colour and intensity instead. It
   also stops packs such as Kappa from treating a modded torch as a solid block that casts a full block of shadow.
   On by default, in its own **Placed blocks** tab.
 

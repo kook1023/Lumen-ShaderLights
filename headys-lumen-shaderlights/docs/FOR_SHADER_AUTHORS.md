@@ -104,6 +104,13 @@ uniforms above, scales brightness and reach by the light level for items outside
 Photon knows exactly as they were. It is Photon-licensed, so read it for reference rather than copying it into
 another pack.
 
+**Placed blocks (optional).** If your pack contains a file `shaders/lumen.properties`, the mod gives placed blocks
+that have a custom colour the block id `10000 + 1024 + code` (so `mc_Entity.x - 10000` is 1024 to 9215), with
+`code = hue | saturation << 6 | intensity << 9` (hue 0-63 of a full turn, saturation 0-7, intensity 1-15). Decode it
+as HSV with full brightness. Without that file the mod only uses ids from your own `block.properties`. The fork's
+`include/lighting/lpv/lumen_color_ids.glsl` decodes it; its light volume was widened from `r8ui` to `r16ui` to hold
+the code.
+
 ## 7. For mod authors
 
 A mod that adds light-emitting items can give them a colour directly: implement Iris'
