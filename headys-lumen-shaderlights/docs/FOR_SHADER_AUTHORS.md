@@ -68,7 +68,8 @@ So you can check your logic against real input. "Colour" is `heldBlockLightColor
 | Item in their list with **only an intensity**, pack knows it | your id (kept) | their level | white |
 | Item in their list with **intensity 0** ("no light", e.g. an unlit torch) | cleared to `-1` | `0` | untouched |
 | Item with **"Pretend to be"** another item | that item's id | their level | their colour, or white if none |
-| Modded item ending in `soul_torch`, `soul_lantern` or `redstone_torch`, auto-detected | your id for that vanilla item | 10, 10 or 7 | white |
+| Modded item ending in `soul_torch`, `soul_lantern`, `redstone_torch`, `sea_lantern`, `jack_o_lantern` or `lantern`, auto-detected | your id for that vanilla item | its vanilla level | white |
+| Modded item ending in `copper_torch` or `copper_lantern`, auto-detected | your closest green, or `-1` if you read the colour | 14 or 15 | green |
 | Any other modded item ending in `torch`, auto-detected, no colour | your `minecraft:torch` id | 14 (default) | white |
 | Anything else | untouched (normal Iris behaviour) | untouched | untouched |
 

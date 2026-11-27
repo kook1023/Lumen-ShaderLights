@@ -106,9 +106,10 @@ Takeaways:
 
 ## 4. The decision order for the item id (`IrisBridge.applyItemId`)
 
-Auto-detect (no list entry) works like a built-in "Pretend to be": a modded id ending in `soul_torch`,
-`soul_lantern` or `redstone_torch` poses as that vanilla item at its vanilla level (10, 10, 7), and any other id
-ending in `torch` poses as `minecraft:torch` (step 4). Your list always comes first.
+Auto-detect (no list entry) works like a built-in "Pretend to be", most specific ending first (`LightMatcher.FAMILIES`):
+`soul_torch`, `soul_lantern`, `redstone_torch`, `copper_torch` / `copper_lantern` (a green colour, since 1.20.1 has
+no copper light), `sea_lantern`, `jack_o_lantern`, `lantern`, each at its vanilla level. Any other id ending in
+`torch` poses as `minecraft:torch` (step 4). Your list always comes first.
 
 Only runs for an item the mod matched in this hand. An item in your list with intensity **0** skips all of this:
 its id is cleared to `-1` and its light set to 0, so no pack lights it (meant for unlit or burnt-out torches).

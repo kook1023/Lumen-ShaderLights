@@ -1,5 +1,6 @@
 package io.github.kook1023.lumen.config;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
@@ -49,6 +50,10 @@ public final class LightPalette {
             new Ref("minecraft:redstone_block", 0xFF1F14),
             new Ref("minecraft:sculk_sensor", 0x33CCCC),
             new Ref("minecraft:warped_fungus", 0x33E6B3),
+            // Copper lights are 1.21 items: they do not exist in 1.20.1, but packs made for both versions (KappaPT)
+            // list them in item.properties with their own green copper light, so the mod can still pose as them.
+            new Ref("minecraft:copper_torch", 0x6BFF8E),
+            new Ref("minecraft:copper_lantern", 0x6BFF8E),
             // Photon (recent versions) keeps 16 colour slots for modded lights, keyed by Simply Light's item names.
             // The items do not need to be installed: the pack's item.properties simply lists them, so the mod can
             // pose as them to get a real blue / green / pink / ... light. Colours are Photon's own table values.
@@ -72,7 +77,11 @@ public final class LightPalette {
     public static List<String> ids() {
         List<String> ids = new ArrayList<>(REFS.size());
         for (Ref ref : REFS) {
-            ids.add(ref.id());
+            ResourceLocation loc = ref.location();
+            // only items that exist in this game (the copper ones are 1.21-only)
+            if (loc != null && BuiltInRegistries.ITEM.containsKey(loc)) {
+                ids.add(ref.id());
+            }
         }
         return ids;
     }

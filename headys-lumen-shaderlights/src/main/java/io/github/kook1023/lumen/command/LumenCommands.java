@@ -90,7 +90,7 @@ public final class LumenCommands {
             src.sendFeedback(Component.literal("  " + describeEntry(e)));
         }
         src.sendFeedback(Component.literal("Auto-detect: " + (cfg.matchTorchSuffix
-                ? "on (modded *soul_torch, *soul_lantern, *redstone_torch as their vanilla light; other *torch level "
+                ? "on (modded soul/redstone/copper torches and lanterns as their vanilla light; other *torch level "
                         + cfg.defaultLightLevel + ")"
                 : "off")));
 

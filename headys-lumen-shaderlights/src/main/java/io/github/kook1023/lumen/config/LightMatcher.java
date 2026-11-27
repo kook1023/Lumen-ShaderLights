@@ -44,14 +44,33 @@ public final class LightMatcher {
      * block's own light level. Checked in this order, before the plain "ends in torch" rule, so soul and redstone
      * torches are not turned into normal torches.
      */
-    private record Family(String suffix, ResourceLocation vanilla, int level) {
+    private record Family(String suffix, ResourceLocation vanilla, Vector3f color, int level) {
+        static Family as(String suffix, String vanilla, int level) {
+            return new Family(suffix, ResourceLocation.tryParse(vanilla), null, level);
+        }
+
+        /** For lights with no vanilla counterpart in 1.20.1 (copper): a colour instead. */
+        static Family colored(String suffix, int rgb, int level) {
+            return new Family(suffix, null,
+                    new Vector3f(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f), level);
+        }
+
+        Match match() {
+            return new Match(level, color, vanilla, false);
+        }
     }
 
+    // Most specific first: "soul_lantern" before "lantern", "redstone_torch" before "torch".
     private static final List<Family> FAMILIES = List.of(
-            new Family("soul_torch", ResourceLocation.tryParse("minecraft:soul_torch"), 10),
-            new Family("soul_lantern", ResourceLocation.tryParse("minecraft:soul_lantern"), 10),
-            new Family("redstone_torch", ResourceLocation.tryParse("minecraft:redstone_torch"), 7),
-            new Family("red_stone_torch", ResourceLocation.tryParse("minecraft:redstone_torch"), 7));
+            Family.as("soul_torch", "minecraft:soul_torch", 10),
+            Family.as("soul_lantern", "minecraft:soul_lantern", 10),
+            Family.as("redstone_torch", "minecraft:redstone_torch", 7),
+            Family.as("red_stone_torch", "minecraft:redstone_torch", 7),
+            Family.colored("copper_torch", 0x6BFF8E, 14),       // copper fire is green
+            Family.colored("copper_lantern", 0x6BFF8E, 15),
+            Family.as("sea_lantern", "minecraft:sea_lantern", 15), // so modded sea lanterns stay blue, not lantern orange
+            Family.as("jack_o_lantern", "minecraft:jack_o_lantern", 15),
+            Family.as("lantern", "minecraft:lantern", 15));
 
     private static final class Snapshot {
         final boolean enabled;
@@ -82,7 +101,7 @@ public final class LightMatcher {
             String path = id.getPath();
             for (Family f : FAMILIES) {
                 if (path.endsWith(f.suffix())) {
-                    return new Match(f.level(), null, f.vanilla(), false);
+                    return f.match();
                 }
             }
             if (path.endsWith("torch")) {
