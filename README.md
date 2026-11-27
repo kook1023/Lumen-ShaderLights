@@ -74,7 +74,7 @@ artifact, and pushing a tag like `v1.3.0` publishes it as a Release.
 | `/lumen config 3` | open it on the **Placed blocks** tab |
 | `/lumen addheld` | add the item in your main hand to your list (works instantly) |
 | `/lumen reload` | re-read the config file |
-| `/lumen status` | Iris hook state, how the current pack takes colours, **what the pack knows**, **your items** (listed separately), exactly what was sent to the shader, how your item was last drawn ("Item look"), and how many placed block states were given a light id |
+| `/lumen status` | Iris hook state, how the current pack takes colours, **what the pack knows**, **your items** (listed separately), exactly what was sent to the shader, how your item was last drawn ("Item look"), how many placed block states were given a light id, and which vanilla light your placed blocks pose as |
 
 ## Config
 **In game:** Mod Menu -> Heady's Lumen: ShaderLights -> Configure, or `/lumen config`. On **Light items** press **+**

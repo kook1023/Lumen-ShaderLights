@@ -104,6 +104,9 @@ public final class LumenCommands {
         src.sendFeedback(Component.literal("Sent to shader: " + IrisBridge.describeSent()));
         src.sendFeedback(Component.literal("Item look: " + RenderedItemBridge.describe()));
         src.sendFeedback(Component.literal("Placed blocks: " + io.github.kook1023.lumen.iris.PlacedLights.describe()));
+        for (String pose : io.github.kook1023.lumen.iris.PlacedLights.poses()) {
+            src.sendFeedback(Component.literal("  " + pose));
+        }
         return 1;
     }
 

@@ -73,7 +73,10 @@ as a solid cube. When Iris loads a pack it stores that map with `WorldRenderingS
 under the id of the vanilla block it poses as. A block is matched through the item that places it, so a wall torch
 follows its torch's entry, and becomes the vanilla *wall* torch, with its facing (and `lit`, `hanging`,
 `waterlogged`) copied over. Saving rebuilds the copy from the pack's original map and reloads the chunks (like
-F3+A), so already placed blocks update; nothing reloads if the result did not change. In a normal pack intensity
+F3+A), so already placed blocks update; nothing reloads if the result did not change. For "closest colour" only vanilla
+lights that glow in their default state and are at least level 7 (or your intensity, if lower) are
+candidates: a placed torch posing as an unlit redstone lamp or a level-1 sculk sensor would be dark in packs that
+list those states (Rethinking Voxels). In a normal pack intensity
 cannot apply to placed blocks: their brightness is the block's own light level.
 
 **Exact colour for placed blocks (PhotonFork).** A pack that contains `shaders/lumen.properties` says it understands

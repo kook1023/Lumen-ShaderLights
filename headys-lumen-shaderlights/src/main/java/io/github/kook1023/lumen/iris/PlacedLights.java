@@ -51,6 +51,7 @@ public final class PlacedLights {
     private static volatile Object2IntMap<BlockState> lastAugmented;
     private static volatile int lastAdded;
     private static volatile int lastCoded;
+    private static volatile List<String> lastPoses = List.of();
     private static volatile String failure;
 
     private PlacedLights() {
@@ -114,6 +115,7 @@ public final class PlacedLights {
         LumenConfig cfg = LumenConfig.get();
         int added = 0;
         codedCount = 0;
+        poses = new ArrayList<>();
         if (cfg.enabled && cfg.placedLights) {
             List<Ref> refs = knownRefs(pack);
             boolean colorIds = PackScanner.packUnderstandsColorIds();
@@ -123,6 +125,7 @@ public final class PlacedLights {
         }
         lastAdded = added;
         lastCoded = codedCount;
+        lastPoses = List.copyOf(poses);
         LumenShaderLights.LOGGER.info("Placed lights: {} block states given a light id", added);
         return out;
     }
@@ -130,12 +133,17 @@ public final class PlacedLights {
     private record Ref(Block block, int rgb) {
     }
 
-    /** Reference lights whose block the pack has an id for (for "closest colour"). */
+    /**
+     * Reference lights whose block the pack has an id for (for "closest colour"). Only blocks that actually glow as
+     * placed: a redstone lamp, respawn anchor or glow berries are dark in their default state, and packs that give
+     * such a state an id (Rethinking Voxels) would make your torch dark too.
+     */
     private static List<Ref> knownRefs(Object2IntMap<BlockState> pack) {
         List<Ref> refs = new ArrayList<>();
         for (LightPalette.Ref r : LightPalette.REFS) {
             Block b = vanillaBlock(r.location());
-            if (b != null && pack.getOrDefault(b.defaultBlockState(), -1) >= 0) {
+            if (b != null && b.defaultBlockState().getLightEmission() > 0
+                    && pack.getOrDefault(b.defaultBlockState(), -1) >= 0) {
                 refs.add(new Ref(b, r.rgb()));
             }
         }
@@ -143,6 +151,7 @@ public final class PlacedLights {
     }
 
     private static int codedCount;
+    private static List<String> poses = new ArrayList<>();
 
     private static int addBlock(Block block, Object2IntMap<BlockState> pack, Object2IntMap<BlockState> out,
                                 List<Ref> refs, LumenConfig cfg, boolean colorIds) {
@@ -179,9 +188,15 @@ public final class PlacedLights {
             }
         }
 
+        if (poses.size() < 8 && !isWall) {
+            poses.add(blockId + " -> " + BuiltInRegistries.BLOCK.getKey(target));
+        }
         int added = 0;
         for (BlockState state : block.getStateDefinition().getPossibleStates()) {
             BlockState like = copyProperties(state, target.defaultBlockState());
+            if (state.getLightEmission() > 0 && like.getLightEmission() == 0) {
+                continue; // your block glows here but that vanilla state is dark (e.g. an unlit redstone torch)
+            }
             int id = pack.getOrDefault(like, -1);
             // id -1: the pack has no id for that exact state, e.g. it lists only "redstone_torch:lit=true",
             // so an unlit modded state stays as it was
@@ -209,16 +224,24 @@ public final class PlacedLights {
         if (m.color() != null && LumenConfig.get().pickNearestColorItem && !refs.isEmpty()) {
             Vector3f c = m.color();
             int rgb = (Math.round(c.x * 255f) << 16) | (Math.round(c.y * 255f) << 8) | Math.round(c.z * 255f);
+            // Skip very dim lights (sculk sensor 1, magma 3, amethyst 5, sea pickle 6): a torch posing as one is
+            // nearly dark. Lights up to level 7 (redstone torch) stay possible.
+            int minEmission = Math.min(m.level(), 7);
             Ref best = null;
             float bestDistance = Float.MAX_VALUE;
             for (Ref r : refs) {
+                if (r.block().defaultBlockState().getLightEmission() < minEmission) {
+                    continue;
+                }
                 float d = LightPalette.distance(rgb, r.rgb());
                 if (d < bestDistance) {
                     bestDistance = d;
                     best = r;
                 }
             }
-            return best.block();
+            if (best != null) {
+                return best.block();
+            }
         }
         return LumenConfig.get().spoofTorchItemId ? vanillaBlock(ResourceLocation.tryParse("minecraft:torch")) : null;
     }
@@ -280,5 +303,10 @@ public final class PlacedLights {
         }
         return lastAdded + " block states use a vanilla light's id"
                 + (lastCoded > 0 ? " (" + lastCoded + " with your exact colour)" : "");
+    }
+
+    /** For /lumen status: which vanilla light each of your placed blocks poses as (first few). */
+    public static List<String> poses() {
+        return lastPoses;
     }
 }
