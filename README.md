@@ -124,7 +124,9 @@ applies immediately.
       ]
     }
 
-- `id`: `modid:item`, `*` wildcards, or a bare `item` for any namespace. Vanilla ids work too.
+- `id`: `modid:item`, `*` wildcards, or a bare `item` for any namespace. Vanilla ids work too. Blocks without an item
+  (lava, fire, soul fire, nether portal) work by their block id, e.g. `minecraft:lava`: that changes the light they
+  cast when placed, only in packs with the light table (the PhotonFork). For lava in your hand use `minecraft:lava_bucket`.
 - `level`: intensity 1-15, used exactly. `0` = no held light at all, for unlit or burnt-out torches (e.g. `{ "id": "*:unlit_torch", "level": 0 }`).
 - `color`: `#RRGGBB`, or `""` to let the pack decide.
 - `pretendToBe`: any item id, or `""` for automatic.

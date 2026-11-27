@@ -21,7 +21,7 @@
   "headys_lumen.config.items.help": "Press + to add a row. Each row is one item: its ID, how bright it is, what colour, and optionally which item the shader should think it is.",
   "headys_lumen.config.item.new": "New item",
   "headys_lumen.config.item.id": "Item ID",
-  "headys_lumen.config.item.id.tooltip": "e.g. examplemod:blue_torch. Vanilla items work too: add minecraft:torch with a colour to recolour torches. You can use * as a wildcard (examplemod:*_lamp). /lumen addheld adds the item in your hand.",
+  "headys_lumen.config.item.id.tooltip": "e.g. examplemod:blue_torch. Vanilla items work too: add minecraft:torch with a colour to recolour torches. You can use * as a wildcard (examplemod:*_lamp). /lumen addheld adds the item in your hand. Blocks without an item (lava, fire, soul fire, nether portal) work by their block id, e.g. minecraft:lava: that changes the light they cast when placed, in packs with the light table (the PhotonFork).",
   "headys_lumen.config.item.intensity": "Intensity",
   "headys_lumen.config.item.intensity.tooltip": "Held light level 1-15, used exactly: it can also dim an item that already glows by itself. 0 = no held light at all, for items such as unlit or burnt-out torches (e.g. *:unlit_torch). Heady's Lumen: ShaderPack_PhotonFork uses it for brightness AND reach. Photon, Solas and Rethinking Voxels ignore it; in Rethinking Voxels the mod dims the colour instead.",
   "headys_lumen.config.item.intensity.value": "Intensity: %s",

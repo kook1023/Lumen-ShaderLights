@@ -166,22 +166,28 @@ public final class PlacedLights {
         boolean vanilla = "minecraft".equals(blockId.getNamespace());
         Item item = block.asItem();
         ItemStack stack = item == null || item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
-        Match m = stack.isEmpty() ? LightMatcher.NONE : LightMatcher.matchFor(stack);
+        // A block with no item (lava, fire, portals) is matched by its own block id in your list, e.g. minecraft:lava
+        boolean noItem = stack.isEmpty();
+        Match m = noItem ? LightMatcher.matchForBlock(blockId) : LightMatcher.matchFor(stack);
+        LumenConfig.Entry entry = noItem ? LightMatcher.entryForBlock(blockId) : LightMatcher.entryFor(stack);
         // Flicker needs a pack that reads the light table (the PhotonFork); it is sorted by the BLOCK's id, so lava,
         // fire and wall torches count too
         FlickerGroups.Spec flicker = table && cfg.placedFlicker
-                ? FlickerGroups.resolve(cfg, blockId, LightMatcher.entryFor(stack), m.pretendTo())
+                ? FlickerGroups.resolve(cfg, blockId, entry, m.pretendTo())
                 : null;
 
-        // 1) your lights (list or auto-detect): pose as a vanilla light
-        if (m.level() > 0) {
+        // 1) your lights (list or auto-detect): pose as a vanilla light. Blocks with no item (lava, fire) keep
+        //    what they are, so they only change in packs with the light table (a fluid posing as a torch would
+        //    look wrong)
+        if (m.level() > 0 && (table || !noItem)) {
             boolean override = m.exact() && (m.color() != null || m.pretendTo() != null);
             boolean packKnows = pack.getOrDefault(block.defaultBlockState(), -1) >= 0;
             boolean keepOwn = (vanilla && !(override && cfg.placedRecolorVanilla)) || (packKnows && !override);
             if (!keepOwn) {
                 // With the light table your colour is exact, so the block only needs a fitting SHAPE to pose as:
                 // itself if the pack knows it, else a torch. Without it, the closest colour picks the light.
-                Block target = table && m.color() != null && m.pretendTo() == null
+                Block target = noItem ? block
+                        : table && m.color() != null && m.pretendTo() == null
                         ? (packKnows ? block : vanillaBlock(ResourceLocation.tryParse("minecraft:torch")))
                         : targetFor(m, refs);
                 if (target != null) {

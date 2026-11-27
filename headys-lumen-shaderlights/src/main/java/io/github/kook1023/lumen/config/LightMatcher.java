@@ -185,6 +185,36 @@ public final class LightMatcher {
         return null;
     }
 
+    /** The list entry for a BLOCK id (blocks with no item, such as lava, fire or portals), or null. */
+    public static LumenConfig.Entry entryForBlock(ResourceLocation blockId) {
+        String full = blockId.toString();
+        for (Rule rule : snapshot.rules) {
+            if (rule.pattern().matcher(full).matches()) {
+                return rule.entry();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * What applies to a placed block that has no item of its own (lava, fire, portals): only your list, matched by
+     * the block's id. Auto-detect does not apply to these.
+     */
+    public static Match matchForBlock(ResourceLocation blockId) {
+        Snapshot s = snapshot;
+        if (!s.enabled) {
+            return NONE;
+        }
+        String full = blockId.toString();
+        for (Rule rule : s.rules) {
+            if (rule.pattern().matcher(full).matches()) {
+                Match m = rule.match();
+                return withFlicker(m, FlickerGroups.resolve(s.cfg, blockId, rule.entry(), m.pretendTo()));
+            }
+        }
+        return NONE;
+    }
+
     /** @return a translation key describing the problem, or empty if the id is fine (or blank). */
     public static Optional<String> validateId(String raw) {
         if (raw == null || raw.isBlank()) {
