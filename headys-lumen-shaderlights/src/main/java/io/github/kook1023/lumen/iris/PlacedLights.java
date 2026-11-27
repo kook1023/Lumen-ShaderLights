@@ -213,6 +213,12 @@ public final class PlacedLights {
         if (poses.size() < 8 && !isWall) {
             poses.add(blockId + " -> " + BuiltInRegistries.BLOCK.getKey(target));
         }
+        // A block that never glows by itself (wool in your list) is a light in every state; one that does (a modded
+        // torch with lit=false) only flickers in the states where it glows
+        boolean glowsSomewhere = false;
+        for (BlockState state : block.getStateDefinition().getPossibleStates()) {
+            glowsSomewhere |= state.getLightEmission() > 0;
+        }
         int added = 0;
         for (BlockState state : block.getStateDefinition().getPossibleStates()) {
             BlockState like = copyProperties(state, target.defaultBlockState());
@@ -226,7 +232,7 @@ public final class PlacedLights {
             if (id < 0) {
                 continue;
             }
-            FlickerGroups.Spec f = glows ? flicker : null;
+            FlickerGroups.Spec f = glows || !glowsSomewhere ? flicker : null;
             if (table && (m.color() != null || f != null)) {
                 // The pack reads the light table: exact colour, intensity and flicker
                 int coded = LightTable.idFor(id, m.color(), m.level(), f);

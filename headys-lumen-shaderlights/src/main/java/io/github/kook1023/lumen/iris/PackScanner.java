@@ -74,6 +74,8 @@ public final class PackScanner {
 
     private static volatile String markerCheckedFor;
     private static volatile boolean markerFound;
+    private static volatile String lastName;
+    private static volatile long lastTimeCheck;
 
     /**
      * Does the active pack contain {@code shaders/lumen.properties}? That file marks packs (the PhotonFork) that
@@ -85,6 +87,12 @@ public final class PackScanner {
         if (name == null) {
             return false;
         }
+        long now = System.currentTimeMillis();
+        if (name.equals(lastName) && now - lastTimeCheck < 1000 && markerCheckedFor != null) {
+            return markerFound;
+        }
+        lastName = name;
+        lastTimeCheck = now;
         String key = name + "@" + packFileTime(name);
         if (key.equals(markerCheckedFor)) {
             return markerFound;

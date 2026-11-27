@@ -148,6 +148,11 @@ public final class IrisBridge {
             // --- A. exact colour uniform (heldBlockLightColor) ---
             if (cfg.sendLightColor && h.lightColor() != null && colorSource.color() != null) {
                 h.lightColor().set(supplier, new Vector3f(colorSource.color()));
+            } else if (flicker < 1f && cfg.sendLightColor && h.lightColor() != null && level > 0
+                    && PackScanner.packUnderstandsColorIds()) {
+                // A light without your colour (a vanilla torch) uses the pack's own colour table, which ignores the
+                // light level. Packs with the Lumen marker read a GREY colour as "dim by this much" instead.
+                h.lightColor().set(supplier, new Vector3f(flicker, flicker, flicker));
             }
 
             // --- B..E. item id (heldItemId) ---
