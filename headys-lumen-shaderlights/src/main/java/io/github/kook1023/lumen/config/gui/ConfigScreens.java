@@ -8,10 +8,10 @@ public final class ConfigScreens {
     private ConfigScreens() {
     }
 
-    /** @param itemsTab true = open on the "Light items" tab instead of "General" */
-    public static Screen create(Screen parent, boolean itemsTab) {
+    /** @param tab 1 = General, 2 = Light items, 3 = Placed blocks */
+    public static Screen create(Screen parent, int tab) {
         if (FabricLoader.getInstance().isModLoaded("cloth-config")) {
-            return ClothConfigScreen.create(parent, itemsTab);
+            return ClothConfigScreen.create(parent, tab);
         }
         return new MissingClothScreen(parent);
     }

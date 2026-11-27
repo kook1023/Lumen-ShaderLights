@@ -17,7 +17,10 @@ intensity (see below).
 - **Vanilla items can be overridden**: add e.g. `minecraft:torch` with a pink colour and your settings win over the
   shader pack's own torch colour.
 - Intensity in your list is used exactly (it can also dim); auto-detected torches only ever get brighter.
-- Held light only (main hand and off-hand), like shader packs themselves.
+- **Placed lights**: placed modded torches and lanterns glow like the vanilla light they act as, by the same rules
+  (your list, then auto-detect). Colours come from the pack's own table; the brightness is the block's own. It
+  also stops packs such as Kappa from treating a modded torch as a solid block that casts a full block of shadow.
+  On by default, in its own **Placed blocks** tab.
 
 ## How the colour reaches each shader pack
 | Pack | What happens |
@@ -67,9 +70,10 @@ artifact, and pushing a tag like `v1.3.0` publishes it as a Release.
 |---|---|
 | `/lumen config` or `/lumen config 1` | open the config screen on the **General** tab |
 | `/lumen config 2` | open it on the **Light items** tab |
+| `/lumen config 3` | open it on the **Placed blocks** tab |
 | `/lumen addheld` | add the item in your main hand to your list (works instantly) |
 | `/lumen reload` | re-read the config file |
-| `/lumen status` | Iris hook state, how the current pack takes colours, **what the pack knows**, **your items** (listed separately), exactly what was sent to the shader, and how your item was last drawn ("Item look") |
+| `/lumen status` | Iris hook state, how the current pack takes colours, **what the pack knows**, **your items** (listed separately), exactly what was sent to the shader, how your item was last drawn ("Item look"), and how many placed block states were given a light id |
 
 ## Config
 **In game:** Mod Menu -> Heady's Lumen: ShaderLights -> Configure, or `/lumen config`. On **Light items** press **+**
@@ -85,6 +89,8 @@ to add a row and **X** to remove one. Saving applies immediately.
       "sendLightColor": true,
       "pickNearestColorItem": true,
       "rgbIdMode": "AUTO",
+      "placedLights": true,
+      "placedRecolorVanilla": true,
       "matchRenderedItem": true,
       "items": [
         { "id": "minecraft:torch",       "level": 14, "color": "#FF8CD9", "pretendToBe": "" },
@@ -99,6 +105,8 @@ to add a row and **X** to remove one. Saving applies immediately.
 - `pretendToBe`: any item id, or `""` for automatic.
 - `rgbIdMode`: `AUTO`, `ON` or `OFF` (the Rethinking Voxels colour-in-id trick).
 - `matchRenderedItem`: also change how your items are drawn (needed for Rethinking Voxels beta 9).
+- `placedLights`: give placed modded lights the id of the vanilla light they act as.
+- `placedRecolorVanilla`: also change placed vanilla blocks that your list recolours (e.g. a pink `minecraft:torch`).
 
 ## Heady's Lumen: ShaderPack_PhotonFork
 A fork of **Photon** by SixthSurge with one changed file (`shaders/include/lighting/handheld_lighting.glsl`) and

@@ -86,8 +86,8 @@ public final class ClothConfigScreen {
         }
     }
 
-    /** @param openItemsTab true = start on the "Light items" tab (used by /lumen config 2) */
-    public static Screen create(Screen parent, boolean openItemsTab) {
+    /** @param tab the tab to open on: 1 = General, 2 = Light items, 3 = Placed blocks (/lumen config 1|2|3) */
+    public static Screen create(Screen parent, int tab) {
         LumenConfig current = LumenConfig.get();
 
         ConfigBuilder builder = ConfigBuilder.create()
@@ -196,11 +196,27 @@ public final class ClothConfigScreen {
                 newCell);
         items.addEntry(itemList);
 
+        // ---------------------------------------------------------------- Placed blocks tab
+        ConfigCategory placed = builder.getOrCreateCategory(Component.translatable(KEY + "category.placed"));
+        placed.addEntry(eb.startTextDescription(Component.translatable(KEY + "placed.help")).build());
+
+        placed.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "placed_lights"), current.placedLights)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable(KEY + "placed_lights.tooltip"))
+                .setSaveConsumer(v -> LumenConfig.get().placedLights = v)
+                .build());
+
+        placed.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "placed_recolor_vanilla"), current.placedRecolorVanilla)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable(KEY + "placed_recolor_vanilla.tooltip"))
+                .setSaveConsumer(v -> LumenConfig.get().placedRecolorVanilla = v)
+                .build());
+
         Screen screen = builder.build();
         // Pick the starting tab. (Cloth's setFallbackCategory does NOT work here: it compares tab names as plain text,
         // and our tab names are translated, so it never matches. The tab index is a public field, so set it directly.)
-        if (openItemsTab && screen instanceof AbstractConfigScreen tabs) {
-            tabs.selectedCategoryIndex = 1;
+        if (tab >= 2 && tab <= 3 && screen instanceof AbstractConfigScreen tabs) {
+            tabs.selectedCategoryIndex = tab - 1;
         }
         return screen;
     }

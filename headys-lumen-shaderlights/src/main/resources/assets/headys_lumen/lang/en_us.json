@@ -45,5 +45,11 @@
   "headys_lumen.config.item.preview": "Preview",
   "headys_lumen.config.item.preview.pack": "Pack decides the colour",
   "headys_lumen.config.match_rendered": "Also change how the item is drawn",
-  "headys_lumen.config.match_rendered.tooltip": "Some packs (such as current Rethinking Voxels releases) only light the hand when the item being DRAWN looks like a light source. With this on, your items are drawn as the vanilla light they pose as (your \"Pretend to be\", else the closest colour, else a torch). Turn it off if a pack makes your items look wrong."
+  "headys_lumen.config.match_rendered.tooltip": "Some packs (such as current Rethinking Voxels releases) only light the hand when the item being DRAWN looks like a light source. With this on, your items are drawn as the vanilla light they pose as (your \"Pretend to be\", else the closest colour, else a torch). Turn it off if a pack makes your items look wrong.",
+  "headys_lumen.config.category.placed": "Placed blocks",
+  "headys_lumen.config.placed.help": "Placed modded torches and lanterns glow like the vanilla light they act as, using the same rules as your held lights: your Light items list (\"Pretend to be\", or the closest colour) and auto-detect. Colours come from the shader pack's own table, and the brightness is the block's own. Saving reloads the world's chunks once (like F3+A).",
+  "headys_lumen.config.placed_lights": "Placed lights",
+  "headys_lumen.config.placed_lights.tooltip": "Shader packs only know vanilla light blocks. With this on, placed modded torches and lanterns get the id of the vanilla light they act as, so the pack gives them its coloured light. It also stops packs such as Kappa from treating a modded torch as a solid block that casts a full block of shadow.",
+  "headys_lumen.config.placed_recolor_vanilla": "Also recolour placed vanilla blocks",
+  "headys_lumen.config.placed_recolor_vanilla.tooltip": "If your Light items list gives a vanilla item a colour or a \"Pretend to be\" (e.g. a pink minecraft:torch), placed blocks of it change too. Off: only your held item changes."
 }

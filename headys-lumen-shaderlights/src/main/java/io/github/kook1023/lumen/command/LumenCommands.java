@@ -23,7 +23,7 @@ import net.minecraft.world.item.ItemStack;
  *   /lumen addheld       add the item in your main hand to your list
  *   /lumen status        what the mod, Iris and the shader pack are doing right now
  *   /lumen config        open the config screen on tab 1 (General)
- *   /lumen config 1|2    open it on tab 1 (General) or tab 2 (Light items)
+ *   /lumen config 1|2|3  open it on tab 1 (General), 2 (Light items) or 3 (Placed blocks)
  * </pre>
  */
 public final class LumenCommands {
@@ -43,7 +43,7 @@ public final class LumenCommands {
                         .executes(ctx -> status(ctx.getSource())))
                 .then(ClientCommandManager.literal("config")
                         .executes(ctx -> openConfig(ctx.getSource(), 1))
-                        .then(ClientCommandManager.argument("tab", IntegerArgumentType.integer(1, 2))
+                        .then(ClientCommandManager.argument("tab", IntegerArgumentType.integer(1, 3))
                                 .executes(ctx -> openConfig(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "tab"))))));
     }
 
@@ -103,6 +103,7 @@ public final class LumenCommands {
         }
         src.sendFeedback(Component.literal("Sent to shader: " + IrisBridge.describeSent()));
         src.sendFeedback(Component.literal("Item look: " + RenderedItemBridge.describe()));
+        src.sendFeedback(Component.literal("Placed blocks: " + io.github.kook1023.lumen.iris.PlacedLights.describe()));
         return 1;
     }
 
@@ -116,11 +117,11 @@ public final class LumenCommands {
         return sb.toString();
     }
 
-    /** @param tab 1 = General, 2 = Light items */
+    /** @param tab 1 = General, 2 = Light items, 3 = Placed blocks */
     private static int openConfig(FabricClientCommandSource src, int tab) {
         Minecraft mc = src.getClient();
         // Queue it: the chat screen closes itself right after a command runs and would close ours too.
-        mc.tell(() -> mc.setScreen(ConfigScreens.create(null, tab == 2)));
+        mc.tell(() -> mc.setScreen(ConfigScreens.create(null, tab)));
         return 1;
     }
 }

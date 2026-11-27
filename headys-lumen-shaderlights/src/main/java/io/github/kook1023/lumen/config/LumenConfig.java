@@ -53,6 +53,10 @@ public final class LumenConfig {
      * rendered item itself, such as current Rethinking Voxels releases.
      */
     public boolean matchRenderedItem = true;
+    /** Placed blocks: give placed modded lights the id of the vanilla light they pose as. */
+    public boolean placedLights = true;
+    /** Placed blocks: also change placed VANILLA blocks that your list recolours (e.g. a pink minecraft:torch). */
+    public boolean placedRecolorVanilla = true;
     /** How to treat packs that read the item id as a colour (Rethinking Voxels). */
     public IdColorMode rgbIdMode = IdColorMode.AUTO;
     /** Your own items. */
@@ -88,6 +92,7 @@ public final class LumenConfig {
         loaded.sanitize();
         current = loaded;
         LightMatcher.rebuild(loaded);
+        notifyChanged();
         if (writeDefaults) {
             save();
         }
@@ -109,6 +114,20 @@ public final class LumenConfig {
         current.sanitize();
         save();
         LightMatcher.rebuild(current);
+        notifyChanged();
+    }
+
+    private static final java.util.List<Runnable> LISTENERS = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /** Runs after every load or save (used to update placed lights). */
+    public static void onChange(Runnable listener) {
+        LISTENERS.add(listener);
+    }
+
+    private static void notifyChanged() {
+        for (Runnable r : LISTENERS) {
+            r.run();
+        }
     }
 
     /** @return false if that item id was already listed. */

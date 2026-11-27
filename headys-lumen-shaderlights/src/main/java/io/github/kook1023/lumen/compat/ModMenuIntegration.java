@@ -8,6 +8,6 @@ import io.github.kook1023.lumen.config.gui.ConfigScreens;
 public final class ModMenuIntegration implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return parent -> ConfigScreens.create(parent, false);
+        return parent -> ConfigScreens.create(parent, 1);
     }
 }

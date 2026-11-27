@@ -15,6 +15,9 @@ public final class LumenShaderLights implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        // Placed lights depend on the config: re-apply them (on the render thread) after every load or save.
+        LumenConfig.onChange(() -> net.minecraft.client.Minecraft.getInstance()
+                .execute(io.github.kook1023.lumen.iris.PlacedLights::refresh));
         LumenConfig.load();
 
         // Re-read the JSON whenever you join a world, so hand edits apply after a rejoin.

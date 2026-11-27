@@ -65,6 +65,17 @@ shader that material through another value, `currentRenderedItemId`, set each ti
       |         or 0 for intensity-0 items
       '-- end of render: RenderedItemBridge.afterRender() puts 0 back, like Iris does
 
+**Placed blocks.** A placed block reaches the shader through yet another number: the id Iris writes into the chunk
+mesh from the pack's `block.properties` (the pack sees it as `mc_Entity`). A modded torch is not in that file, so
+it gets `-1`: no coloured light, and packs that build a block world for their lighting (Kappa, KappaPT) treat it
+as a solid cube. When Iris loads a pack it stores that map with `WorldRenderingSettings.setBlockStateIds`;
+`PlacedLightsMixin` hands it a copy from `PlacedLights.augment` instead, with every state of your blocks added
+under the id of the vanilla block it poses as. A block is matched through the item that places it, so a wall torch
+follows its torch's entry, and becomes the vanilla *wall* torch, with its facing (and `lit`, `hanging`,
+`waterlogged`) copied over. Saving rebuilds the copy from the pack's original map and reloads the chunks (like
+F3+A), so already placed blocks update; nothing reloads if the result did not change. Intensity cannot apply to
+placed blocks: their brightness is the block's own light level.
+
 Setting: "Also change how the item is drawn" (`matchRenderedItem`). Side effect: your item also *looks* like
 that vanilla light to the pack wherever it is drawn (in hand, dropped, in item frames).
 
@@ -169,11 +180,13 @@ text, on a background thread.
     |   |-- IrisBridge.java              THE HEART. Everything that touches Iris' numbers
     |   |-- RgbId.java                   encode/decode the Rethinking Voxels `main` colour-in-id format
     |   |-- PackScanner.java             checks whether the active pack mentions heldBlockLightColor
-    |   '-- RenderedItemBridge.java      the second hook: changes how your items are drawn (currentRenderedItemId)
+    |   |-- RenderedItemBridge.java      the second hook: changes how your items are drawn (currentRenderedItemId)
+    |   '-- PlacedLights.java            placed blocks: adds your blocks to the pack's block id map
     '-- mixin/
         |-- IrisHeldItemSupplierMixin.java         hooks Iris (new package name)
         |-- LegacyIrisHeldItemSupplierMixin.java   hooks Iris (old package name)
-        '-- ItemRendererMixin.java                 hooks Minecraft's item renderer (for RenderedItemBridge)
+        |-- ItemRendererMixin.java                 hooks Minecraft's item renderer (for RenderedItemBridge)
+        '-- PlacedLightsMixin.java                 hooks Iris' block id map (for PlacedLights)
 
     src/main/resources/
     |-- fabric.mod.json                  mod id, dependencies, entry points

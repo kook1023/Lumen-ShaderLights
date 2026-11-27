@@ -6,7 +6,8 @@
   "client": [
     "IrisHeldItemSupplierMixin",
     "LegacyIrisHeldItemSupplierMixin",
-    "ItemRendererMixin"
+    "ItemRendererMixin",
+    "PlacedLightsMixin"
   ],
   "injectors": {
     "defaultRequire": 0
