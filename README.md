@@ -9,7 +9,9 @@ Companion shader pack: **Heady's Lumen: ShaderPack_PhotonFork**, a small Photon 
 intensity (see below).
 
 ## What it does
-- Any **modded** item whose id ends in `torch` lights up automatically (toggle in the config).
+- **Modded torches light up automatically** (toggle in the config): ids ending in `soul_torch`, `soul_lantern` or
+  `redstone_torch` act as that vanilla light, so they glow cyan or red, and any other id ending in `torch` acts as
+  a normal torch.
 - **Your Light items list**: per item an **intensity** (1-15), a **colour** (hue + saturation sliders with a live
   preview box) and an optional **"Pretend to be"** item.
 - **Vanilla items can be overridden**: add e.g. `minecraft:torch` with a pink colour and your settings win over the

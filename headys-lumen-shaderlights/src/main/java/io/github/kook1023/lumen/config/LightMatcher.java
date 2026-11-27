@@ -39,6 +39,20 @@ public final class LightMatcher {
     private record Rule(Pattern pattern, Match match) {
     }
 
+    /**
+     * Auto-detect families: a modded item whose id ends in {@code suffix} poses as {@code vanilla}, at that vanilla
+     * block's own light level. Checked in this order, before the plain "ends in torch" rule, so soul and redstone
+     * torches are not turned into normal torches.
+     */
+    private record Family(String suffix, ResourceLocation vanilla, int level) {
+    }
+
+    private static final List<Family> FAMILIES = List.of(
+            new Family("soul_torch", ResourceLocation.tryParse("minecraft:soul_torch"), 10),
+            new Family("soul_lantern", ResourceLocation.tryParse("minecraft:soul_lantern"), 10),
+            new Family("redstone_torch", ResourceLocation.tryParse("minecraft:redstone_torch"), 7),
+            new Family("red_stone_torch", ResourceLocation.tryParse("minecraft:redstone_torch"), 7));
+
     private static final class Snapshot {
         final boolean enabled;
         final boolean matchSuffix;
@@ -62,7 +76,16 @@ public final class LightMatcher {
                 }
             }
             // Vanilla items are skipped: Iris already lights those (soul torch, lantern, ...).
-            if (matchSuffix && !"minecraft".equals(id.getNamespace()) && id.getPath().endsWith("torch")) {
+            if (!matchSuffix || "minecraft".equals(id.getNamespace())) {
+                return NONE;
+            }
+            String path = id.getPath();
+            for (Family f : FAMILIES) {
+                if (path.endsWith(f.suffix())) {
+                    return new Match(f.level(), null, f.vanilla(), false);
+                }
+            }
+            if (path.endsWith("torch")) {
                 return suffixMatch;
             }
             return NONE;

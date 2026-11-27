@@ -90,7 +90,9 @@ public final class LumenCommands {
             src.sendFeedback(Component.literal("  " + describeEntry(e)));
         }
         src.sendFeedback(Component.literal("Auto-detect: " + (cfg.matchTorchSuffix
-                ? "on (modded items ending in \"torch\", level " + cfg.defaultLightLevel + ")" : "off")));
+                ? "on (modded *soul_torch, *soul_lantern, *redstone_torch as their vanilla light; other *torch level "
+                        + cfg.defaultLightLevel + ")"
+                : "off")));
 
         LocalPlayer player = src.getPlayer();
         for (InteractionHand hand : InteractionHand.values()) {
