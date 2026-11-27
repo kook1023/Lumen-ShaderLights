@@ -31,12 +31,19 @@ public final class LumenConfig {
         public String color = "";
         /** Item the shader should think this is (e.g. "minecraft:sea_lantern"), or "" for automatic. */
         public String pretendToBe = "";
-        /** Held light flickers like a flame. */
-        public boolean flicker = false;
-        /** Flicker speed 1-20 (roughly changes per second). */
+        /**
+         * "follow" (the Flicker tab decides, by group), "on" (always, with this row's speed and strength) or "off".
+         * Older files stored true/false here: true reads as "on", false as "follow".
+         */
+        public String flicker = "follow";
+        /** Flicker speed 1-20 (roughly changes per second), used when flicker is "on". */
         public int flickerSpeed = 6;
-        /** How much the flicker dims, in percent of the intensity (5-100). */
+        /** How much the flicker dims, in percent of the intensity (5-100), used when flicker is "on". */
         public int flickerStrength = 35;
+
+        public FlickerMode flickerMode() {
+            return FlickerMode.parse(flicker);
+        }
 
         public Entry() {
         }
@@ -63,8 +70,23 @@ public final class LumenConfig {
     public boolean placedLights = true;
     /** Placed blocks: also change placed VANILLA blocks that your list recolours (e.g. a pink minecraft:torch). */
     public boolean placedRecolorVanilla = true;
-    /** Placed blocks: lights with Flicker on also flicker when placed (packs that support it: the PhotonFork). */
+    /** Placed blocks: lights that flicker also flicker when placed (packs that support it: the PhotonFork). */
     public boolean placedFlicker = true;
+
+    // ---- Flicker tab
+    /** Which lights flicker when their row says "Follow group" (or they are not in your list). */
+    public FlickerPreset flickerPreset = FlickerPreset.GROUPS;
+    /** Speed (1-20) and strength (5-100 %) for lights that flicker because of the Flicker tab. */
+    public int defaultFlickerSpeed = 6;
+    public int defaultFlickerStrength = 35;
+    public boolean flickerTorches = true;
+    public boolean flickerLanterns = true;
+    public boolean flickerFire = false;
+    public boolean flickerRedstone = false;
+    public boolean flickerSea = false;
+    public boolean flickerNether = false;
+    public boolean flickerFroglights = false;
+    public boolean flickerCave = false;
     /** How to treat packs that read the item id as a colour (Rethinking Voxels). */
     public IdColorMode rgbIdMode = IdColorMode.AUTO;
     /** Your own items. */
@@ -75,6 +97,23 @@ public final class LumenConfig {
      * AUTO detects that by looking at the ids the pack gives to well-known items (torch = orange, ...).
      */
     public enum IdColorMode { AUTO, ON, OFF }
+
+    /** A row's Flicker setting. */
+    public enum FlickerMode {
+        FOLLOW, ON, OFF;
+
+        static FlickerMode parse(String s) {
+            String v = s == null ? "" : s.trim().toLowerCase(Locale.ROOT);
+            return switch (v) {
+                case "on", "true" -> ON;
+                case "off" -> OFF;
+                default -> FOLLOW;
+            };
+        }
+    }
+
+    /** Flicker tab: GROUPS = the group switches decide; IMMERSION = a hand-picked set; ALL = every light. */
+    public enum FlickerPreset { GROUPS, IMMERSION, ALL }
 
     public static LumenConfig get() {
         return current;
@@ -173,6 +212,11 @@ public final class LumenConfig {
         if (rgbIdMode == null) {
             rgbIdMode = IdColorMode.AUTO;
         }
+        if (flickerPreset == null) {
+            flickerPreset = FlickerPreset.GROUPS;
+        }
+        defaultFlickerSpeed = Math.max(1, Math.min(20, defaultFlickerSpeed));
+        defaultFlickerStrength = Math.max(5, Math.min(100, defaultFlickerStrength));
         List<Entry> clean = new ArrayList<>();
         if (items != null) {
             for (Entry e : items) {
@@ -184,6 +228,7 @@ public final class LumenConfig {
                 int rgb = Colors.parseHex(e.color);
                 e.color = rgb < 0 ? "" : Colors.toHex(rgb);
                 e.pretendToBe = text(e.pretendToBe).toLowerCase(Locale.ROOT);
+                e.flicker = e.flickerMode().name().toLowerCase(Locale.ROOT);
                 e.flickerSpeed = Math.max(1, Math.min(20, e.flickerSpeed));
                 e.flickerStrength = Math.max(5, Math.min(100, e.flickerStrength));
                 clean.add(e);

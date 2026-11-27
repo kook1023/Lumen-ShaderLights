@@ -1,6 +1,7 @@
 package io.github.kook1023.lumen.iris;
 
 import io.github.kook1023.lumen.LumenShaderLights;
+import io.github.kook1023.lumen.config.FlickerGroups;
 import io.github.kook1023.lumen.config.LightMatcher;
 import io.github.kook1023.lumen.config.LightMatcher.Match;
 import io.github.kook1023.lumen.config.LightPalette;
@@ -120,10 +121,12 @@ public final class PlacedLights {
         poses = new ArrayList<>();
         if (cfg.enabled && cfg.placedLights) {
             List<Ref> refs = knownRefs(pack);
-            boolean colorIds = PackScanner.packUnderstandsColorIds();
+            boolean table = PackScanner.packUnderstandsColorIds();
+            LightTable.clear();
             for (Block block : BuiltInRegistries.BLOCK) {
-                added += addBlock(block, pack, out, refs, cfg, colorIds);
+                added += addBlock(block, pack, out, refs, cfg, table);
             }
+            LightTable.upload();
         }
         lastAdded = added;
         lastCoded = codedCount;
@@ -158,35 +161,40 @@ public final class PlacedLights {
     private static List<String> poses = new ArrayList<>();
 
     private static int addBlock(Block block, Object2IntMap<BlockState> pack, Object2IntMap<BlockState> out,
-                                List<Ref> refs, LumenConfig cfg, boolean colorIds) {
-        Item item = block.asItem();
-        if (item == null || item == Items.AIR) {
-            return 0;
-        }
-        Match m = LightMatcher.matchFor(new ItemStack(item));
-        if (m.level() <= 0) {
-            return 0; // not one of ours, or intensity 0 ("no light"): leave the block as the pack sees it
-        }
+                                List<Ref> refs, LumenConfig cfg, boolean table) {
         ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(block);
         boolean vanilla = "minecraft".equals(blockId.getNamespace());
-        // Flicker only changes a block in packs that can show it (colour-coded ids)
-        boolean flicker = colorIds && cfg.placedFlicker && m.flickers();
-        boolean override = m.exact() && (m.color() != null || m.pretendTo() != null || flicker);
-        if (vanilla && !(override && cfg.placedRecolorVanilla)) {
-            return 0; // the pack already knows vanilla blocks; only change them when your list asks for it
-        }
-        boolean packKnows = pack.getOrDefault(block.defaultBlockState(), -1) >= 0;
-        if (packKnows && !override) {
-            return 0; // the pack has its own id for this modded block: keep it
-        }
+        Item item = block.asItem();
+        ItemStack stack = item == null || item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
+        Match m = stack.isEmpty() ? LightMatcher.NONE : LightMatcher.matchFor(stack);
+        // Flicker needs a pack that reads the light table (the PhotonFork); it is sorted by the BLOCK's id, so lava,
+        // fire and wall torches count too
+        FlickerGroups.Spec flicker = table && cfg.placedFlicker
+                ? FlickerGroups.resolve(cfg, blockId, LightMatcher.entryFor(stack), m.pretendTo())
+                : null;
 
-        Block target = targetFor(m, refs);
-        if (target == null) {
-            return 0;
+        // 1) your lights (list or auto-detect): pose as a vanilla light
+        if (m.level() > 0) {
+            boolean override = m.exact() && (m.color() != null || m.pretendTo() != null);
+            boolean packKnows = pack.getOrDefault(block.defaultBlockState(), -1) >= 0;
+            boolean keepOwn = (vanilla && !(override && cfg.placedRecolorVanilla)) || (packKnows && !override);
+            if (!keepOwn) {
+                // With the light table your colour is exact, so the block only needs a fitting SHAPE to pose as:
+                // itself if the pack knows it, else a torch. Without it, the closest colour picks the light.
+                Block target = table && m.color() != null && m.pretendTo() == null
+                        ? (packKnows ? block : vanillaBlock(ResourceLocation.tryParse("minecraft:torch")))
+                        : targetFor(m, refs);
+                if (target != null) {
+                    return poseAs(block, item, target, blockId, pack, out, m, table, flicker);
+                }
+            }
         }
-        // Colour-coded id (packs with shaders/lumen.properties): your colour, or for a flickering light without one
-        // the colour of the vanilla light it poses as, so it can carry the flicker flag
-        Vector3f coded = !colorIds ? null : m.color() != null ? m.color() : flicker ? paletteColor(target) : null;
+        // 2) any other light that should flicker keeps the pack's own id, wrapped in a table row
+        return flicker == null ? 0 : flickerOwn(block, pack, out, flicker);
+    }
+
+    private static int poseAs(Block block, Item item, Block target, ResourceLocation blockId, Object2IntMap<BlockState> pack,
+                              Object2IntMap<BlockState> out, Match m, boolean table, FlickerGroups.Spec flicker) {
         // A wall torch is placed by the same item as the standing one, but is its own block.
         boolean isWall = item instanceof BlockItem bi && bi.getBlock() != block;
         if (isWall) {
@@ -196,46 +204,56 @@ public final class PlacedLights {
                 target = wall;
             }
         }
-
         if (poses.size() < 8 && !isWall) {
             poses.add(blockId + " -> " + BuiltInRegistries.BLOCK.getKey(target));
         }
         int added = 0;
         for (BlockState state : block.getStateDefinition().getPossibleStates()) {
             BlockState like = copyProperties(state, target.defaultBlockState());
-            if (state.getLightEmission() > 0 && like.getLightEmission() == 0) {
+            boolean glows = state.getLightEmission() > 0;
+            if (glows && like.getLightEmission() == 0) {
                 continue; // your block glows here but that vanilla state is dark (e.g. an unlit redstone torch)
             }
             int id = pack.getOrDefault(like, -1);
             // id -1: the pack has no id for that exact state, e.g. it lists only "redstone_torch:lit=true",
             // so an unlit modded state stays as it was
-            if (id >= 0) {
-                if (coded != null) {
-                    // The pack (PhotonFork) understands colour-coded ids: exact colour, intensity and flicker
-                    id = PlacedColorId.encode(coded, m.level(), flicker);
-                    codedCount++;
-                    if (flicker) {
-                        flickerCount++;
-                    }
-                }
-                out.put(state, id);
-                added++;
+            if (id < 0) {
+                continue;
             }
+            FlickerGroups.Spec f = glows ? flicker : null;
+            if (table && (m.color() != null || f != null)) {
+                // The pack reads the light table: exact colour, intensity and flicker
+                int coded = LightTable.idFor(id, m.color(), m.level(), f);
+                if (coded >= 0) {
+                    id = coded;
+                    codedCount++;
+                    flickerCount += f != null ? 1 : 0;
+                }
+            }
+            out.put(state, id);
+            added++;
         }
         return added;
     }
 
-    /** The colour of a vanilla light from the palette (torch orange if it is not listed). */
-    private static Vector3f paletteColor(Block target) {
-        String key = BuiltInRegistries.BLOCK.getKey(target).toString();
-        int rgb = 0xFF9933;
-        for (LightPalette.Ref r : LightPalette.REFS) {
-            if (r.id().equals(key)) {
-                rgb = r.rgb();
-                break;
+    /** A light that keeps the pack's own id (vanilla lava, a known modded lamp, ...) but flickers. */
+    private static int flickerOwn(Block block, Object2IntMap<BlockState> pack, Object2IntMap<BlockState> out,
+                                  FlickerGroups.Spec flicker) {
+        int added = 0;
+        for (BlockState state : block.getStateDefinition().getPossibleStates()) {
+            int id = pack.getOrDefault(state, -1);
+            if (state.getLightEmission() <= 0 || id < 0) {
+                continue; // dark in this state (unlit furnace), or the pack has no id for it
+            }
+            int coded = LightTable.idFor(id, null, state.getLightEmission(), flicker);
+            if (coded >= 0) {
+                out.put(state, coded);
+                added++;
+                codedCount++;
+                flickerCount++;
             }
         }
-        return new Vector3f(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f);
+        return added;
     }
 
     /** The vanilla block to pose as: your "Pretend to be", else the closest colour, else a torch. */
@@ -326,9 +344,9 @@ public final class PlacedLights {
         if (original == null) {
             return "waiting for a shader pack";
         }
-        return lastAdded + " block states use a vanilla light's id"
-                + (lastCoded > 0 ? " (" + lastCoded + " with your exact colour"
-                        + (lastFlickering > 0 ? ", " + lastFlickering + " flickering" : "") + ")" : "");
+        return lastAdded + " block states changed"
+                + (lastCoded > 0 ? " (" + lastCoded + " through the light table, " + lastFlickering + " of them flicker, "
+                        + LightTable.size() + " table rows)" : "");
     }
 
     /** For /lumen status: which vanilla light each of your placed blocks poses as (first few). */

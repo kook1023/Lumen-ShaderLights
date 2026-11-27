@@ -39,15 +39,28 @@ public final class LightMatcher {
     }
 
     public static final Match NONE = new Match(0, null, null, false);
+    /** Like NONE, but a flicker may be added (a vanilla light such as a torch in your hand). */
+    private static final Match NONE_FLICKERABLE = new Match(0, null, null, false);
 
     private static final Pattern ID_CHARS = Pattern.compile("[a-z0-9_.\\-/*:]+");
-    private static volatile Snapshot snapshot = new Snapshot(false, false, 14, List.of());
+    private static volatile Snapshot snapshot = new Snapshot(new LumenConfig(), false, false, 14, List.of());
 
     private LightMatcher() {
     }
 
-    /** @param source the entry's id as written in your list (for /lumen removeheld) */
-    private record Rule(Pattern pattern, Match match, String source) {
+    /**
+     * @param source the entry's id as written in your list (for /lumen removeheld)
+     * @param entry  the list entry itself (its flicker setting)
+     */
+    private record Rule(Pattern pattern, Match match, String source, LumenConfig.Entry entry) {
+    }
+
+    /** The same match with a flicker added (or the match itself for a steady light). */
+    private static Match withFlicker(Match m, FlickerGroups.Spec spec) {
+        if (spec == null || (m.level() <= 0 && m.exact())) {
+            return m; // steady, or an entry with intensity 0 ("no light")
+        }
+        return new Match(m.level(), m.color(), m.pretendTo(), m.exact(), spec.speed(), spec.strength());
     }
 
     /**
@@ -84,13 +97,15 @@ public final class LightMatcher {
             Family.as("lantern", "minecraft:lantern", 15));
 
     private static final class Snapshot {
+        final LumenConfig cfg;
         final boolean enabled;
         final boolean matchSuffix;
         final Match suffixMatch;
         final List<Rule> rules;
         final Map<Item, Match> cache = new ConcurrentHashMap<>();
 
-        Snapshot(boolean enabled, boolean matchSuffix, int suffixLevel, List<Rule> rules) {
+        Snapshot(LumenConfig cfg, boolean enabled, boolean matchSuffix, int suffixLevel, List<Rule> rules) {
+            this.cfg = cfg;
             this.enabled = enabled;
             this.matchSuffix = matchSuffix;
             this.suffixMatch = new Match(suffixLevel, null, null, false);
@@ -102,23 +117,28 @@ public final class LightMatcher {
             String full = id.toString();
             for (Rule rule : rules) {
                 if (rule.pattern().matcher(full).matches()) {
-                    return rule.match();
+                    Match m = rule.match();
+                    return withFlicker(m, FlickerGroups.resolve(cfg, id, rule.entry(), m.pretendTo()));
                 }
             }
-            // Vanilla items are skipped: Iris already lights those (soul torch, lantern, ...).
+            // Vanilla items are skipped: Iris already lights those (soul torch, lantern, ...). They can still
+            // flicker (Flicker tab): then the match has level 0 and only carries the flicker.
             if (!matchSuffix || "minecraft".equals(id.getNamespace())) {
-                return NONE;
+                Match flickerOnly = withFlicker(NONE_FLICKERABLE, FlickerGroups.resolve(cfg, id, null, null));
+                return flickerOnly == NONE_FLICKERABLE ? NONE : flickerOnly;
             }
             String path = id.getPath();
             for (Family f : FAMILIES) {
                 if (path.endsWith(f.suffix())) {
-                    return f.match();
+                    Match m = f.match();
+                    return withFlicker(m, FlickerGroups.resolve(cfg, id, null, m.pretendTo()));
                 }
             }
             if (path.endsWith("torch")) {
-                return suffixMatch;
+                return withFlicker(suffixMatch, FlickerGroups.resolve(cfg, id, null, null));
             }
-            return NONE;
+            Match flickerOnly = withFlicker(NONE_FLICKERABLE, FlickerGroups.resolve(cfg, id, null, null));
+            return flickerOnly == NONE_FLICKERABLE ? NONE : flickerOnly;
         }
     }
 
@@ -133,7 +153,7 @@ public final class LightMatcher {
                 LumenShaderLights.LOGGER.warn("Ignoring invalid item entry '{}'", entry.id);
             }
         }
-        snapshot = new Snapshot(cfg.enabled, cfg.matchTorchSuffix, cfg.defaultLightLevel, List.copyOf(rules));
+        snapshot = new Snapshot(cfg, cfg.enabled, cfg.matchTorchSuffix, cfg.defaultLightLevel, List.copyOf(rules));
     }
 
     /** @return what applies to this stack, or {@link #NONE} (level 0) if it is not a torch. */
@@ -147,13 +167,19 @@ public final class LightMatcher {
 
     /** @return the id of the list entry (possibly a wildcard) that matches this stack, or null if none does. */
     public static String listEntryFor(ItemStack stack) {
+        LumenConfig.Entry e = entryFor(stack);
+        return e == null ? null : e.id;
+    }
+
+    /** @return the list entry (possibly a wildcard) that matches this stack, or null if none does. */
+    public static LumenConfig.Entry entryFor(ItemStack stack) {
         if (stack.isEmpty()) {
             return null;
         }
         String full = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
         for (Rule rule : snapshot.rules) {
             if (rule.pattern().matcher(full).matches()) {
-                return rule.source();
+                return rule.entry();
             }
         }
         return null;
@@ -182,11 +208,9 @@ public final class LightMatcher {
         int level = Math.max(0, Math.min(15, e.level));
         if (level == 0) {
             // Level 0 = "no held light at all" (unlit / burnt-out torches): no colour, no pretend.
-            return new Rule(pattern, new Match(0, null, null, true), e.id);
+            return new Rule(pattern, new Match(0, null, null, true), e.id, e);
         }
-        float speed = e.flicker ? Math.max(1, Math.min(20, e.flickerSpeed)) : 0f;
-        float strength = e.flicker ? Math.max(5, Math.min(100, e.flickerStrength)) / 100f : 0f;
-        return new Rule(pattern, new Match(level, color, pretend, true, speed, strength), e.id);
+        return new Rule(pattern, new Match(level, color, pretend, true), e.id, e);
     }
 
     private static Pattern glob(String raw) {

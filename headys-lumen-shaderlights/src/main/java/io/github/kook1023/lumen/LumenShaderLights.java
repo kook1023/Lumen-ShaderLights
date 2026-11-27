@@ -23,6 +23,10 @@ public final class LumenShaderLights implements ClientModInitializer {
         // Re-read the JSON whenever you join a world, so hand edits apply after a rejoin.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> LumenConfig.load());
 
+        // The light table texture placed lights use in packs that read it (the PhotonFork)
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STARTED.register(
+                client -> io.github.kook1023.lumen.iris.LightTable.register());
+
         ClientCommandRegistrationCallback.EVENT.register(
                 (dispatcher, registryAccess) -> LumenCommands.register(dispatcher));
     }

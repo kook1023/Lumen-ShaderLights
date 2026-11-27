@@ -41,7 +41,7 @@ public final class ClothConfigScreen {
         AbstractConfigListEntry<Integer> saturation;
         ColorPreviewEntry preview;
         AbstractConfigListEntry<String> pretend;
-        AbstractConfigListEntry<Boolean> flicker;
+        AbstractConfigListEntry<LumenConfig.FlickerMode> flicker;
         AbstractConfigListEntry<Integer> flickerSpeed;
         AbstractConfigListEntry<Integer> flickerStrength;
         int originalHue;
@@ -78,7 +78,7 @@ public final class ClothConfigScreen {
             e.id = id.getValue() == null ? "" : id.getValue().trim();
             e.level = level.getValue();
             e.pretendToBe = pretend.getValue() == null ? "" : pretend.getValue().trim();
-            e.flicker = flicker.getValue();
+            e.flicker = flicker.getValue().name().toLowerCase(Locale.ROOT);
             e.flickerSpeed = flickerSpeed.getValue();
             e.flickerStrength = flickerStrength.getValue();
             if (useColor.getValue()) {
@@ -93,8 +93,8 @@ public final class ClothConfigScreen {
     }
 
     /**
-     * @param tab the tab to open on: 1 = General, 2 = Light items, 3 = Handheld, 4 = Placed blocks
-     *            (/lumen config 1-4)
+     * @param tab the tab to open on: 1 = General, 2 = Light items, 3 = Handheld, 4 = Placed blocks, 5 = Flicker
+     *            (/lumen config 1-5)
      */
     public static Screen create(Screen parent, int tab) {
         LumenConfig current = LumenConfig.get();
@@ -234,13 +234,66 @@ public final class ClothConfigScreen {
                 .setSaveConsumer(v -> LumenConfig.get().placedFlicker = v)
                 .build());
 
+        // ---------------------------------------------------------------- Flicker tab
+        ConfigCategory flick = builder.getOrCreateCategory(Component.translatable(KEY + "category.flicker"));
+        flick.addEntry(eb.startTextDescription(Component.translatable(KEY + "flicker.help")).build());
+
+        AbstractConfigListEntry<LumenConfig.FlickerPreset> preset = eb.startEnumSelector(
+                        Component.translatable(KEY + "flicker.preset"), LumenConfig.FlickerPreset.class, current.flickerPreset)
+                .setDefaultValue(LumenConfig.FlickerPreset.GROUPS)
+                .setEnumNameProvider(p -> Component.translatable(KEY + "flicker.preset." + p.name().toLowerCase(Locale.ROOT)))
+                .setTooltip(Component.translatable(KEY + "flicker.preset.tooltip"))
+                .setSaveConsumer(v -> LumenConfig.get().flickerPreset = v)
+                .build();
+        flick.addEntry(preset);
+
+        flick.addEntry(eb.startIntSlider(Component.translatable(KEY + "flicker.speed"), current.defaultFlickerSpeed, 1, 20)
+                .setDefaultValue(6)
+                .setTooltip(Component.translatable(KEY + "flicker.speed.tooltip"))
+                .setTextGetter(v -> Component.translatable(KEY + "item.flicker_speed.value", v))
+                .setSaveConsumer(v -> LumenConfig.get().defaultFlickerSpeed = v)
+                .build());
+
+        flick.addEntry(eb.startIntSlider(Component.translatable(KEY + "flicker.strength"), current.defaultFlickerStrength, 5, 100)
+                .setDefaultValue(35)
+                .setTooltip(Component.translatable(KEY + "flicker.strength.tooltip"))
+                .setTextGetter(v -> Component.translatable(KEY + "item.flicker_strength.value", v))
+                .setSaveConsumer(v -> LumenConfig.get().defaultFlickerStrength = v)
+                .build());
+
+        addGroup(eb, flick, preset, "torches", current.flickerTorches, true, v -> LumenConfig.get().flickerTorches = v);
+        addGroup(eb, flick, preset, "lanterns", current.flickerLanterns, true, v -> LumenConfig.get().flickerLanterns = v);
+        addGroup(eb, flick, preset, "fire", current.flickerFire, false, v -> LumenConfig.get().flickerFire = v);
+        addGroup(eb, flick, preset, "redstone", current.flickerRedstone, false, v -> LumenConfig.get().flickerRedstone = v);
+        addGroup(eb, flick, preset, "sea", current.flickerSea, false, v -> LumenConfig.get().flickerSea = v);
+        addGroup(eb, flick, preset, "nether", current.flickerNether, false, v -> LumenConfig.get().flickerNether = v);
+        addGroup(eb, flick, preset, "froglights", current.flickerFroglights, false, v -> LumenConfig.get().flickerFroglights = v);
+        addGroup(eb, flick, preset, "cave", current.flickerCave, false, v -> LumenConfig.get().flickerCave = v);
+
         Screen screen = builder.build();
         // Pick the starting tab. (Cloth's setFallbackCategory does NOT work here: it compares tab names as plain text,
         // and our tab names are translated, so it never matches. The tab index is a public field, so set it directly.)
-        if (tab >= 2 && tab <= 4 && screen instanceof AbstractConfigScreen tabs) {
+        if (tab >= 2 && tab <= 5 && screen instanceof AbstractConfigScreen tabs) {
             tabs.selectedCategoryIndex = tab - 1;
         }
         return screen;
+    }
+
+    /** One group switch. Shown in grey (and ignored) while the mode above is not "Use the groups". */
+    private static void addGroup(ConfigEntryBuilder eb, ConfigCategory cat,
+                                 AbstractConfigListEntry<LumenConfig.FlickerPreset> preset, String key, boolean value,
+                                 boolean def, java.util.function.Consumer<Boolean> save) {
+        cat.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "flicker.group." + key), value)
+                .setDefaultValue(def)
+                .setTooltip(Component.translatable(KEY + "flicker.group." + key + ".tooltip"))
+                .setYesNoTextSupplier(v -> {
+                    boolean used = preset.getValue() == LumenConfig.FlickerPreset.GROUPS;
+                    Component text = Component.translatable(KEY + (v ? "flicker.yes" : "flicker.no"));
+                    return used ? text : Component.translatable(KEY + "flicker.ignored", text)
+                            .withStyle(net.minecraft.ChatFormatting.DARK_GRAY);
+                })
+                .setSaveConsumer(save)
+                .build());
     }
 
     private static void buildWidgets(ConfigEntryBuilder eb, Row row) {
@@ -287,8 +340,10 @@ public final class ClothConfigScreen {
 
         row.preview = new ColorPreviewEntry(Component.translatable(KEY + "item.preview"), row::previewRgb, row::previewCaption);
 
-        row.flicker = eb.startBooleanToggle(Component.translatable(KEY + "item.flicker"), d.flicker)
-                .setDefaultValue(false)
+        row.flicker = eb.startEnumSelector(Component.translatable(KEY + "item.flicker"),
+                        LumenConfig.FlickerMode.class, d.flickerMode())
+                .setDefaultValue(LumenConfig.FlickerMode.FOLLOW)
+                .setEnumNameProvider(mode -> Component.translatable(KEY + "item.flicker." + mode.name().toLowerCase(Locale.ROOT)))
                 .setTooltip(Component.translatable(KEY + "item.flicker.tooltip"))
                 .build();
 

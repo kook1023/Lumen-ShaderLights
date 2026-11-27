@@ -131,8 +131,13 @@ public final class IrisBridge {
                 level = off.level();
                 colorSource = off;
             }
-            // Flicker: dim the level a little, differently every frame (the shader reads it every frame)
-            float flicker = Flicker.factor(colorSource, colorSource == off ? 1 : 0);
+            // Flicker: dim the level a little, differently every frame (the shader reads it every frame).
+            // A vanilla light (torch in hand) has no colorSource; its match still carries the Flicker tab's choice.
+            Match flickerSource = colorSource;
+            if (colorSource == LightMatcher.NONE) {
+                flickerSource = own.flickers() ? own : off.flickers() ? off : LightMatcher.NONE;
+            }
+            float flicker = Flicker.factor(flickerSource, flickerSource == off ? 1 : 0);
             if (flicker < 1f && level > 0) {
                 level = Math.max(0, Math.min(15, Math.round(level * flicker)));
             }

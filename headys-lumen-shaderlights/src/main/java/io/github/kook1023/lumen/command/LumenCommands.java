@@ -24,7 +24,7 @@ import net.minecraft.world.item.ItemStack;
  *   /lumen removeheld    remove the item in your main hand from your list
  *   /lumen status        what the mod, Iris and the shader pack are doing right now
  *   /lumen config        open the config screen on tab 1 (General)
- *   /lumen config 1-4    open it on tab 1 (General), 2 (Light items), 3 (Handheld) or 4 (Placed blocks)
+ *   /lumen config 1-5    open it on tab 1 (General), 2 (Light items), 3 (Handheld), 4 (Placed blocks) or 5 (Flicker)
  * </pre>
  */
 public final class LumenCommands {
@@ -46,7 +46,7 @@ public final class LumenCommands {
                         .executes(ctx -> status(ctx.getSource())))
                 .then(ClientCommandManager.literal("config")
                         .executes(ctx -> openConfig(ctx.getSource(), 1))
-                        .then(ClientCommandManager.argument("tab", IntegerArgumentType.integer(1, 4))
+                        .then(ClientCommandManager.argument("tab", IntegerArgumentType.integer(1, 5))
                                 .executes(ctx -> openConfig(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "tab"))))));
     }
 
@@ -130,9 +130,17 @@ public final class LumenCommands {
         for (InteractionHand hand : InteractionHand.values()) {
             ItemStack stack = player.getItemInHand(hand);
             String name = stack.isEmpty() ? "(empty)" : BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+            LightMatcher.Match hm = LightMatcher.matchFor(stack);
             src.sendFeedback(Component.literal(" " + hand + ": " + name
-                    + " -> light level " + LightMatcher.matchFor(stack).level()));
+                    + " -> light level " + hm.level()
+                    + (hm.flickers() ? ", flickers (speed " + Math.round(hm.flickerSpeed()) + ", strength "
+                            + Math.round(hm.flickerStrength() * 100) + "%)" : "")));
         }
+        src.sendFeedback(Component.literal("Flicker: " + switch (cfg.flickerPreset) {
+            case ALL -> "all lights";
+            case IMMERSION -> "immersion mode";
+            case GROUPS -> "groups";
+        } + ", default speed " + cfg.defaultFlickerSpeed + ", strength " + cfg.defaultFlickerStrength + "% (/lumen config 5)"));
         src.sendFeedback(Component.literal("Sent to shader: " + IrisBridge.describeSent()));
         src.sendFeedback(Component.literal("Item look: " + RenderedItemBridge.describe()));
         src.sendFeedback(Component.literal("Placed blocks: " + io.github.kook1023.lumen.iris.PlacedLights.describe()));
@@ -149,13 +157,18 @@ public final class LumenCommands {
         if (!e.pretendToBe.isEmpty()) {
             sb.append(", as ").append(e.pretendToBe.replace("minecraft:", ""));
         }
-        if (e.flicker && e.level > 0) {
-            sb.append(", flicker speed ").append(e.flickerSpeed).append(" strength ").append(e.flickerStrength).append('%');
+        if (e.level > 0) {
+            switch (e.flickerMode()) {
+                case ON -> sb.append(", flicker speed ").append(e.flickerSpeed).append(" strength ")
+                        .append(e.flickerStrength).append('%');
+                case OFF -> sb.append(", no flicker");
+                default -> { } // follows the Flicker tab
+            }
         }
         return sb.toString();
     }
 
-    /** @param tab 1 = General, 2 = Light items, 3 = Handheld, 4 = Placed blocks */
+    /** @param tab 1 = General, 2 = Light items, 3 = Handheld, 4 = Placed blocks, 5 = Flicker */
     private static int openConfig(FabricClientCommandSource src, int tab) {
         Minecraft mc = src.getClient();
         // Queue it: the chat screen closes itself right after a command runs and would close ours too.

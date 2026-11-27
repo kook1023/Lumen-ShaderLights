@@ -13,14 +13,19 @@ intensity (see below).
   ids ending in `soul_torch` / `soul_lantern` (cyan), `redstone_torch` (red), `sea_lantern`, `jack_o_lantern`,
   `lantern`, and `copper_torch` / `copper_lantern` (green). Any other id ending in `torch` acts as a normal torch.
 - **Your Light items list**: per item an **intensity** (1-15), a **colour** (hue + saturation sliders with a live
-  preview box), an optional **"Pretend to be"** item, and an optional **flicker** (speed and strength) that makes the
-  held light waver like a flame.
+  preview box), an optional **"Pretend to be"** item, and **Flicker**: *Follow group* (default), *On* (with its own
+  speed and strength) or *Off*.
+- **Flicker** like a flame, held and placed. The **Flicker** tab decides for every light that follows it: the group
+  switches (torches and lanterns on by default; fire, redstone, sea, nether, froglights and cave lights), **Immersion
+  mode** (a hand-picked set of lights that would really flicker) or **Flicker all lights**, with a default speed and
+  strength.
 - **Vanilla items can be overridden**: add e.g. `minecraft:torch` with a pink colour and your settings win over the
   shader pack's own torch colour.
 - Intensity in your list is used exactly (it can also dim); auto-detected torches only ever get brighter.
 - **Placed lights**: placed modded torches and lanterns glow like the vanilla light they act as, by the same rules
   (your list, then auto-detect). Colours come from the pack's own table; the brightness is the block's own. With
-  the PhotonFork, placed lights with a colour in your list show that exact colour and intensity instead. It
+  the PhotonFork, placed lights show your exact colour and intensity and can flicker, through the mod's light table
+  (a small texture the pack reads). It
   also stops packs such as Kappa from treating a modded torch as a solid block that casts a full block of shadow.
   On by default, in its own **Placed blocks** tab.
 
@@ -74,6 +79,7 @@ artifact, and pushing a tag like `v1.3.0` publishes it as a Release.
 | `/lumen config 2` | open it on the **Light items** tab |
 | `/lumen config 3` | open it on the **Handheld** tab |
 | `/lumen config 4` | open it on the **Placed blocks** tab |
+| `/lumen config 5` | open it on the **Flicker** tab |
 | `/lumen addheld` | add the item in your main hand to your list (works instantly) |
 | `/lumen removeheld` | remove the item in your main hand from your list. Never removes a wildcard entry; if a wildcard or auto-detect still lights the item, it tells you which |
 | `/lumen reload` | re-read the config file |
@@ -98,11 +104,22 @@ applies immediately.
       "placedLights": true,
       "placedRecolorVanilla": true,
       "placedFlicker": true,
+      "flickerPreset": "GROUPS",
+      "defaultFlickerSpeed": 6,
+      "defaultFlickerStrength": 35,
+      "flickerTorches": true,
+      "flickerLanterns": true,
+      "flickerFire": false,
+      "flickerRedstone": false,
+      "flickerSea": false,
+      "flickerNether": false,
+      "flickerFroglights": false,
+      "flickerCave": false,
       "matchRenderedItem": true,
       "items": [
         { "id": "minecraft:torch",       "level": 14, "color": "#FF8CD9", "pretendToBe": "" },
         { "id": "examplemod:blue_torch", "level": 12, "color": "#3399FF", "pretendToBe": "",
-          "flicker": true, "flickerSpeed": 6, "flickerStrength": 35 },
+          "flicker": "on", "flickerSpeed": 6, "flickerStrength": 35 },
         { "id": "examplemod:*_lamp",     "level": 10, "color": "",        "pretendToBe": "minecraft:sea_lantern" }
       ]
     }
@@ -111,17 +128,18 @@ applies immediately.
 - `level`: intensity 1-15, used exactly. `0` = no held light at all, for unlit or burnt-out torches (e.g. `{ "id": "*:unlit_torch", "level": 0 }`).
 - `color`: `#RRGGBB`, or `""` to let the pack decide.
 - `pretendToBe`: any item id, or `""` for automatic.
-- `flicker`, `flickerSpeed` (1-20), `flickerStrength` (5-100, how far it dims as % of the intensity): the held light
-  flickers in packs that use the held light level (PhotonFork, Complementary, BSL, KappaPT) and in Rethinking Voxels;
-  Photon and Solas use a fixed hand-light brightness. Placed, it flickers only in the PhotonFork, which animates it
-  itself with one speed and strength for all placed lights (its *Colored Lights* settings). Optional: rows without
-  them don't flicker.
+- `flicker`: `"follow"` (default: the Flicker tab decides), `"on"` (with `flickerSpeed` 1-20 and `flickerStrength`
+  5-100, how far it dims as % of the intensity) or `"off"`. Older files with `true` / `false` still load (as on /
+  follow). The held light flickers in packs that use the held light level (PhotonFork, Complementary, BSL, KappaPT)
+  and in Rethinking Voxels; Photon and Solas use a fixed hand-light brightness. Placed, only the PhotonFork shows it.
 - `rgbIdMode`: `AUTO`, `ON` or `OFF` (the Rethinking Voxels colour-in-id trick).
 - `matchRenderedItem`: also change how your items are drawn (needed for Rethinking Voxels beta 9).
 - `placedLights`: give placed modded lights the id of the vanilla light they act as.
 - `placedRecolorVanilla`: also change placed vanilla blocks that your list recolours (e.g. a pink `minecraft:torch`).
-- `placedFlicker`: placed lights with Flicker on flicker too, in packs that support it (the PhotonFork). No extra cost:
-  the pack animates it.
+- `placedFlicker`: lights that flicker also flicker when placed, in packs that read the light table (the PhotonFork).
+  No extra cost: the pack animates it.
+- `flickerPreset`: `GROUPS` (the `flicker...` switches decide), `IMMERSION` or `ALL` (every light, even rows set to
+  off). `defaultFlickerSpeed` / `defaultFlickerStrength` are used for every light that flickers because of these.
 
 ## Heady's Lumen: ShaderPack_PhotonFork
 A fork of **Photon** by SixthSurge with one changed file (`shaders/include/lighting/handheld_lighting.glsl`) and

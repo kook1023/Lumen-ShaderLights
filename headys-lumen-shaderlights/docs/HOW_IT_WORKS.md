@@ -65,8 +65,12 @@ shader that material through another value, `currentRenderedItemId`, set each ti
       |         or 0 for intensity-0 items
       '-- end of render: RenderedItemBridge.afterRender() puts 0 back, like Iris does
 
-**Flicker.** If your entry has Flicker on, `IrisBridge` multiplies the light level it writes by
-`Flicker.factor(...)` every frame (Iris re-reads the held values every frame). The factor is smooth random noise
+**Flicker.** Which lights flicker is decided by `FlickerGroups.resolve`: a row set to *On* uses its own speed and
+strength, *Off* never flickers (unless the Flicker tab says "all lights"), and *Follow group* (and every light not in
+your list) follows the Flicker tab: its group switches, Immersion mode, or all lights, with the default speed and
+strength. Groups are found from the id (vanilla ids are listed; modded ids by name, e.g. anything ending in `torch`).
+`LightMatcher` puts the result into the `Match` of every item, vanilla ones too. `IrisBridge` then multiplies the
+light level it writes by `Flicker.factor(...)` every frame (Iris re-reads the held values every frame). The factor is smooth random noise
 between `1 - strength` and 1, squared so the flame stays near full brightness and dips now and then; the off-hand
 uses a different seed so both hands are out of step. Packs only take whole light levels, so 14 at 35% moves between
 about 9 and 14. For colour-in-id packs (Rethinking Voxels) the same factor dims the colour instead.
@@ -85,15 +89,17 @@ candidates: a placed torch posing as an unlit redstone lamp or a level-1 sculk s
 list those states (Rethinking Voxels). In a normal pack intensity
 cannot apply to placed blocks: their brightness is the block's own light level.
 
-**Exact colour for placed blocks (PhotonFork).** A pack that contains `shaders/lumen.properties` says it understands
-colour-coded ids (`PackScanner.packUnderstandsColorIds`, checked once per pack while Iris loads it). For such a pack,
-a placed block whose entry has a colour gets the id `10000 + 1024 + code` instead of a vanilla light's id, where
-`code = hue (6 bits) | saturation << 6 (3 bits) | intensity << 9 (4 bits) | flicker << 13 (1 bit)` (`PlacedColorId`).
-The pack renders the block like a torch and lights its light volume with that colour, at its torch brightness times
-intensity / 14. With the flicker bit the pack dims that light by smooth noise every frame, so placed flicker costs no
-chunk reloads; a flickering entry without a colour is coded with its vanilla light's palette colour so it can carry
-the bit.
-Colour brightness (the V of HSV) is not stored; 64 hues x 8 saturations is close to, not exactly, your colour.
+**The light table (PhotonFork).** A pack whose `shaders/lumen.properties` says `lumen.lightTable=1` reads the mod's
+light table (`PackScanner.packUnderstandsColorIds`, checked again whenever the pack file changes). `LightTable` is a
+384 x 128 texture registered as `headys_lumen:light_table` when the game starts; the pack binds it with
+`customTexture`. For such a pack, a placed light that needs your exact colour or a flicker gets the id
+`11024 + row`, and the row holds the block's own pack id, your colour (if any), its intensity and its flicker. The
+pack keeps treating the block as what it is (a torch, lava, a furnace) and only changes the light it gives:
+your colour at its torch brightness times intensity / 14, dimmed by smooth noise every frame when it flickers. A
+block with an exact colour poses as itself if the pack knows it, else as a torch (the colour no longer has to come
+from the closest vanilla light). Lights that only flicker (vanilla lava, a known modded lamp) keep their own pack id
+inside the row. Rows are shared: every placed torch with the same settings uses one row. Changing only colours or
+flicker rewrites the texture and reloads nothing.
 
 Setting: "Also change how the item is drawn" (`matchRenderedItem`). Side effect: your item also *looks* like
 that vanilla light to the pack wherever it is drawn (in hand, dropped, in item frames).
@@ -183,7 +189,7 @@ text, on a background thread.
 
     src/main/java/io/github/kook1023/lumen/
     |-- LumenShaderLights.java           entry point; loads config, registers commands, reloads on world join
-    |-- command/LumenCommands.java       /lumen  (reload, addheld, status, config [1|2])
+    |-- command/LumenCommands.java       /lumen  (reload, addheld, removeheld, status, config [1-5])
     |-- compat/ModMenuIntegration.java   the "Configure" button in Mod Menu
     |-- config/
     |   |-- LumenConfig.java             the JSON file. Fields = settings. Nested class Entry = one item row
@@ -191,6 +197,7 @@ text, on a background thread.
     |   |-- Colors.java                  "#RRGGBB" <-> int, HSV <-> RGB
     |   |-- LightPalette.java            the list of vanilla "reference" light items and their colours
     |   |-- Flicker.java                 the flame-like brightness factor for "Flicker"
+    |   |-- FlickerGroups.java           which lights flicker: groups, Immersion mode, Follow / On / Off
     |   '-- gui/
     |       |-- ClothConfigScreen.java   the in-game editor (tabs, rows, sliders)
     |       |-- ColorPreviewEntry.java   the live colour box
@@ -201,7 +208,8 @@ text, on a background thread.
     |   |-- RgbId.java                   encode/decode the Rethinking Voxels `main` colour-in-id format
     |   |-- PackScanner.java             checks whether the active pack mentions heldBlockLightColor
     |   |-- RenderedItemBridge.java      the second hook: changes how your items are drawn (currentRenderedItemId)
-    |   '-- PlacedLights.java            placed blocks: adds your blocks to the pack's block id map
+    |   |-- PlacedLights.java            placed blocks: adds your blocks to the pack's block id map
+    |   '-- LightTable.java              the light table texture for the PhotonFork (colour, intensity, flicker)
     '-- mixin/
         |-- IrisHeldItemSupplierMixin.java         hooks Iris (new package name)
         |-- LegacyIrisHeldItemSupplierMixin.java   hooks Iris (old package name)

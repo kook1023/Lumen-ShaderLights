@@ -104,13 +104,23 @@ uniforms above, scales brightness and reach by the light level for items outside
 Photon knows exactly as they were. It is Photon-licensed, so read it for reference rather than copying it into
 another pack.
 
-**Placed blocks (optional).** If your pack contains a file `shaders/lumen.properties`, the mod gives placed blocks
-that have a custom colour the block id `10000 + 1024 + code` (so `mc_Entity.x - 10000` is 1024 to 17407), with
-`code = hue | saturation << 6 | intensity << 9 | flicker << 13` (hue 0-63 of a full turn, saturation 0-7, intensity
-1-15, flicker 0 or 1). Decode it as HSV with full brightness; when the flicker bit is set, animate the brightness
-yourself (the fork uses smooth noise over `frameTimeCounter`, seeded by the block's world position). Without that file the mod only uses ids from your own `block.properties`. The fork's
-`include/lighting/lpv/lumen_color_ids.glsl` decodes it; its light volume was widened from `r8ui` to `r32ui` to hold
-the code.
+**Placed blocks (optional): the light table.** If your pack contains `shaders/lumen.properties` with the line
+`lumen.lightTable=1`, the mod gives placed lights that need an exact colour, intensity or flicker the block id
+`11024 + row` (so `mc_Entity.x - 10000` is 1024 to 17407), and keeps a small texture with one row per such light.
+Bind it with `customTexture.lumen_light_table = headys_lumen:light_table` and read row `r` at
+`x = r % 128 * 3 + k, y = r / 128` (`texelFetch`, values * 255):
+
+| texel | R | G | B |
+|---|---|---|---|
+| 0 | the block's own id from your `block.properties`, low byte | high byte | flags: 1 = custom colour, 2 = flicker |
+| 1 | colour R | colour G | colour B |
+| 2 | intensity 1-15 | flicker speed 1-20 | flicker strength 0-100 % |
+
+Use the block's own id for everything except the light it gives (so a modded torch is still a torch). For a flicker,
+animate the brightness yourself (the fork uses smooth noise over `frameTimeCounter`, seeded by the block's world
+position). Without the marker the mod only uses ids from your own `block.properties`. The fork's
+`include/lighting/lpv/lumen_color_ids.glsl` reads it; its light volume was widened from `r8ui` to `r32ui` to hold
+the row.
 
 ## 7. For mod authors
 

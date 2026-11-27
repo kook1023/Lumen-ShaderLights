@@ -85,7 +85,8 @@ public final class PackScanner {
         if (name == null) {
             return false;
         }
-        if (name.equals(markerCheckedFor)) {
+        String key = name + "@" + packFileTime(name);
+        if (key.equals(markerCheckedFor)) {
             return markerFound;
         }
         boolean found = false;
@@ -94,18 +95,34 @@ public final class PackScanner {
             Path dir = iris == null ? null : (Path) iris.getMethod("getShaderpacksDirectory").invoke(null);
             Path pack = dir == null ? null : dir.resolve(name);
             if (pack != null && Files.isDirectory(pack)) {
-                found = Files.exists(pack.resolve("shaders").resolve("lumen.properties"));
+                found = markerSaysTable(pack.resolve("shaders").resolve("lumen.properties"));
             } else if (pack != null && Files.isRegularFile(pack)) {
                 try (FileSystem zip = FileSystems.newFileSystem(pack)) {
-                    found = Files.exists(zip.getPath("/shaders/lumen.properties"));
+                    found = markerSaysTable(zip.getPath("/shaders/lumen.properties"));
                 }
             }
         } catch (Exception | LinkageError e) {
             found = false;
         }
         markerFound = found;
-        markerCheckedFor = name;
+        markerCheckedFor = key;
         return found;
+    }
+
+    /** Changes when the pack file is replaced, so a new version of the same pack is checked again. */
+    private static long packFileTime(String name) {
+        try {
+            Class<?> iris = findIrisClass();
+            Path dir = iris == null ? null : (Path) iris.getMethod("getShaderpacksDirectory").invoke(null);
+            return dir == null ? 0 : Files.getLastModifiedTime(dir.resolve(name)).toMillis();
+        } catch (Exception | LinkageError e) {
+            return 0;
+        }
+    }
+
+    /** The marker must say {@code lumen.lightTable=1} (older forks used colour codes the mod no longer sends). */
+    private static boolean markerSaysTable(Path marker) throws java.io.IOException {
+        return Files.exists(marker) && Files.readString(marker).replace(" ", "").contains("lumen.lightTable=1");
     }
 
     private static String currentPackName() {
