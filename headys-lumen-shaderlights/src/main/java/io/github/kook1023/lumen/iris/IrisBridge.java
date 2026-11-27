@@ -5,6 +5,7 @@ import io.github.kook1023.lumen.config.Colors;
 import io.github.kook1023.lumen.config.LightPalette;
 import io.github.kook1023.lumen.config.LumenConfig;
 import io.github.kook1023.lumen.config.LumenConfig.IdColorMode;
+import io.github.kook1023.lumen.config.Flicker;
 import io.github.kook1023.lumen.config.LightMatcher;
 import io.github.kook1023.lumen.config.LightMatcher.Match;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
@@ -130,6 +131,11 @@ public final class IrisBridge {
                 level = off.level();
                 colorSource = off;
             }
+            // Flicker: dim the level a little, differently every frame (the shader reads it every frame)
+            float flicker = Flicker.factor(colorSource, colorSource == off ? 1 : 0);
+            if (flicker < 1f && level > 0) {
+                level = Math.max(0, Math.min(15, Math.round(level * flicker)));
+            }
             if (level != light) {
                 h.lightValue().setInt(supplier, level);
             }
@@ -141,7 +147,7 @@ public final class IrisBridge {
 
             // --- B..E. item id (heldItemId) ---
             if (own.level() > 0) {
-                applyItemId(h, supplier, cfg, own, map);
+                applyItemId(h, supplier, cfg, own, map, colorSource == own ? flicker : 1f);
             } else if (ownOff) {
                 // Hide the item from the pack too: packs that colour by id (Photon, Solas, Rethinking Voxels)
                 // would otherwise still light an item they know, whatever the light level says.
@@ -162,7 +168,7 @@ public final class IrisBridge {
      * your list with a colour or a "Pretend to be", your settings win: that is how you make a pink torch.
      */
     private static void applyItemId(Handles h, Object supplier, LumenConfig cfg, Match own,
-                                    Object2IntFunction<Object> map) throws ReflectiveOperationException {
+                                    Object2IntFunction<Object> map, float flicker) throws ReflectiveOperationException {
         boolean canLookUp = map != null && h.keyCtor() != null;
         int unmapped = map != null ? map.defaultReturnValue() : -1;
         boolean packKnowsItem = h.intId().getInt(supplier) != unmapped;
@@ -183,7 +189,8 @@ public final class IrisBridge {
         if (chosen == unmapped && own.color() != null) {
             if (rgbIds) {
                 // B. colour-in-id packs: dim the colour for a lower intensity (these packs ignore the light level)
-                chosen = RgbId.encode(own.color(), Math.min(1f, own.level() / 14f));
+                // (flicker dims it too: these packs ignore the light level)
+                chosen = RgbId.encode(own.color(), Math.min(1f, own.level() / 14f) * flicker);
             } else if (!exactViaUniform && cfg.pickNearestColorItem && canLookUp) {
                 // C. closest pack-known item
                 chosen = nearestMapped(info, own.color(), unmapped);

@@ -21,9 +21,10 @@ import net.minecraft.world.item.ItemStack;
  * <pre>
  *   /lumen reload        re-read config/headys_lumen.json
  *   /lumen addheld       add the item in your main hand to your list
+ *   /lumen removeheld    remove the item in your main hand from your list
  *   /lumen status        what the mod, Iris and the shader pack are doing right now
  *   /lumen config        open the config screen on tab 1 (General)
- *   /lumen config 1|2|3  open it on tab 1 (General), 2 (Light items) or 3 (Placed blocks)
+ *   /lumen config 1-4    open it on tab 1 (General), 2 (Light items), 3 (Handheld) or 4 (Placed blocks)
  * </pre>
  */
 public final class LumenCommands {
@@ -39,11 +40,13 @@ public final class LumenCommands {
                         .executes(ctx -> reload(ctx.getSource())))
                 .then(ClientCommandManager.literal("addheld")
                         .executes(ctx -> addHeld(ctx.getSource())))
+                .then(ClientCommandManager.literal("removeheld")
+                        .executes(ctx -> removeHeld(ctx.getSource())))
                 .then(ClientCommandManager.literal("status")
                         .executes(ctx -> status(ctx.getSource())))
                 .then(ClientCommandManager.literal("config")
                         .executes(ctx -> openConfig(ctx.getSource(), 1))
-                        .then(ClientCommandManager.argument("tab", IntegerArgumentType.integer(1, 3))
+                        .then(ClientCommandManager.argument("tab", IntegerArgumentType.integer(1, 4))
                                 .executes(ctx -> openConfig(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "tab"))))));
     }
 
@@ -67,6 +70,35 @@ public final class LumenCommands {
         }
         src.sendError(Component.literal(PREFIX + id + " is already in your list."));
         return 0;
+    }
+
+    private static int removeHeld(FabricClientCommandSource src) {
+        ItemStack stack = src.getPlayer().getMainHandItem();
+        if (stack.isEmpty()) {
+            src.sendError(Component.literal(PREFIX + "hold the item you want to remove in your main hand."));
+            return 0;
+        }
+        String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        if (LumenConfig.removeItem(id)) {
+            src.sendFeedback(Component.literal(PREFIX + "removed " + id + " from your list."
+                    + (LightMatcher.matchFor(stack).level() > 0 ? " It still lights up: "
+                    + whyItStillGlows(stack) : "")));
+            return 1;
+        }
+        src.sendError(Component.literal(PREFIX + id + " is not in your list by itself. " + whyItStillGlows(stack)));
+        return 0;
+    }
+
+    /** Explains what (other than its own entry) lights an item, without changing anything. */
+    private static String whyItStillGlows(ItemStack stack) {
+        String rule = LightMatcher.listEntryFor(stack);
+        if (rule != null) {
+            return "It matches the entry \"" + rule + "\" - remove or change that one in /lumen config 2.";
+        }
+        if (LightMatcher.matchFor(stack).level() > 0) {
+            return "Auto-detect lights it; to switch it off, /lumen addheld it and set Intensity to 0.";
+        }
+        return "Nothing in your list lights it.";
     }
 
     private static int status(FabricClientCommandSource src) {
@@ -117,10 +149,13 @@ public final class LumenCommands {
         if (!e.pretendToBe.isEmpty()) {
             sb.append(", as ").append(e.pretendToBe.replace("minecraft:", ""));
         }
+        if (e.flicker && e.level > 0) {
+            sb.append(", flicker speed ").append(e.flickerSpeed).append(" strength ").append(e.flickerStrength).append('%');
+        }
         return sb.toString();
     }
 
-    /** @param tab 1 = General, 2 = Light items, 3 = Placed blocks */
+    /** @param tab 1 = General, 2 = Light items, 3 = Handheld, 4 = Placed blocks */
     private static int openConfig(FabricClientCommandSource src, int tab) {
         Minecraft mc = src.getClient();
         // Queue it: the chat screen closes itself right after a command runs and would close ours too.

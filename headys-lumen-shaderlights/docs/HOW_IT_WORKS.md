@@ -65,6 +65,12 @@ shader that material through another value, `currentRenderedItemId`, set each ti
       |         or 0 for intensity-0 items
       '-- end of render: RenderedItemBridge.afterRender() puts 0 back, like Iris does
 
+**Flicker.** If your entry has Flicker on, `IrisBridge` multiplies the light level it writes by
+`Flicker.factor(...)` every frame (Iris re-reads the held values every frame). The factor is smooth random noise
+between `1 - strength` and 1, squared so the flame stays near full brightness and dips now and then; the off-hand
+uses a different seed so both hands are out of step. Packs only take whole light levels, so 14 at 35% moves between
+about 9 and 14. For colour-in-id packs (Rethinking Voxels) the same factor dims the colour instead.
+
 **Placed blocks.** A placed block reaches the shader through yet another number: the id Iris writes into the chunk
 mesh from the pack's `block.properties` (the pack sees it as `mc_Entity`). A modded torch is not in that file, so
 it gets `-1`: no coloured light, and packs that build a block world for their lighting (Kappa, KappaPT) treat it
@@ -181,6 +187,7 @@ text, on a background thread.
     |   |-- LightMatcher.java            turns config into fast lookups; matchFor(stack) -> Match
     |   |-- Colors.java                  "#RRGGBB" <-> int, HSV <-> RGB
     |   |-- LightPalette.java            the list of vanilla "reference" light items and their colours
+    |   |-- Flicker.java                 the flame-like brightness factor for "Flicker"
     |   '-- gui/
     |       |-- ClothConfigScreen.java   the in-game editor (tabs, rows, sliders)
     |       |-- ColorPreviewEntry.java   the live colour box

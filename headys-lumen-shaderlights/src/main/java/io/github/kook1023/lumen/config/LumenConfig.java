@@ -31,6 +31,12 @@ public final class LumenConfig {
         public String color = "";
         /** Item the shader should think this is (e.g. "minecraft:sea_lantern"), or "" for automatic. */
         public String pretendToBe = "";
+        /** Held light flickers like a flame. */
+        public boolean flicker = false;
+        /** Flicker speed 1-20 (roughly changes per second). */
+        public int flickerSpeed = 6;
+        /** How much the flicker dims, in percent of the intensity (5-100). */
+        public int flickerStrength = 35;
 
         public Entry() {
         }
@@ -146,6 +152,16 @@ public final class LumenConfig {
         return true;
     }
 
+    /** @return false if no entry has exactly that id (wildcard entries are never removed this way). */
+    public static synchronized boolean removeItem(String id) {
+        String clean = id.trim().toLowerCase(Locale.ROOT);
+        boolean removed = current.items.removeIf(e -> e.id.equals(clean));
+        if (removed) {
+            applyAndSave();
+        }
+        return removed;
+    }
+
     private static String text(String s) {
         return s == null ? "" : s.trim();
     }
@@ -166,6 +182,8 @@ public final class LumenConfig {
                 int rgb = Colors.parseHex(e.color);
                 e.color = rgb < 0 ? "" : Colors.toHex(rgb);
                 e.pretendToBe = text(e.pretendToBe).toLowerCase(Locale.ROOT);
+                e.flickerSpeed = Math.max(1, Math.min(20, e.flickerSpeed));
+                e.flickerStrength = Math.max(5, Math.min(100, e.flickerStrength));
                 clean.add(e);
             }
         }

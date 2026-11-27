@@ -13,7 +13,8 @@ intensity (see below).
   ids ending in `soul_torch` / `soul_lantern` (cyan), `redstone_torch` (red), `sea_lantern`, `jack_o_lantern`,
   `lantern`, and `copper_torch` / `copper_lantern` (green). Any other id ending in `torch` acts as a normal torch.
 - **Your Light items list**: per item an **intensity** (1-15), a **colour** (hue + saturation sliders with a live
-  preview box) and an optional **"Pretend to be"** item.
+  preview box), an optional **"Pretend to be"** item, and an optional **flicker** (speed and strength) that makes the
+  held light waver like a flame.
 - **Vanilla items can be overridden**: add e.g. `minecraft:torch` with a pink colour and your settings win over the
   shader pack's own torch colour.
 - Intensity in your list is used exactly (it can also dim); auto-detected torches only ever get brighter.
@@ -71,14 +72,18 @@ artifact, and pushing a tag like `v1.3.0` publishes it as a Release.
 |---|---|
 | `/lumen config` or `/lumen config 1` | open the config screen on the **General** tab |
 | `/lumen config 2` | open it on the **Light items** tab |
-| `/lumen config 3` | open it on the **Placed blocks** tab |
+| `/lumen config 3` | open it on the **Handheld** tab |
+| `/lumen config 4` | open it on the **Placed blocks** tab |
 | `/lumen addheld` | add the item in your main hand to your list (works instantly) |
+| `/lumen removeheld` | remove the item in your main hand from your list. Never removes a wildcard entry; if a wildcard or auto-detect still lights the item, it tells you which |
 | `/lumen reload` | re-read the config file |
 | `/lumen status` | Iris hook state, how the current pack takes colours, **what the pack knows**, **your items** (listed separately), exactly what was sent to the shader, how your item was last drawn ("Item look"), how many placed block states were given a light id, and which vanilla light your placed blocks pose as |
 
 ## Config
-**In game:** Mod Menu -> Heady's Lumen: ShaderLights -> Configure, or `/lumen config`. On **Light items** press **+**
-to add a row and **X** to remove one. Saving applies immediately.
+**In game:** Mod Menu -> Heady's Lumen: ShaderLights -> Configure, or `/lumen config`. Tabs: **General** (on/off,
+auto-detect, the fallbacks used for both held and placed lights), **Light items** (your list: press **+** to add a row
+and **X** to remove one), **Handheld** (how the light in your hand reaches the pack) and **Placed blocks**. Saving
+applies immediately.
 
 **By file:** `config/headys_lumen.json`, then `/lumen reload` (or rejoin the world).
 
@@ -95,7 +100,8 @@ to add a row and **X** to remove one. Saving applies immediately.
       "matchRenderedItem": true,
       "items": [
         { "id": "minecraft:torch",       "level": 14, "color": "#FF8CD9", "pretendToBe": "" },
-        { "id": "examplemod:blue_torch", "level": 12, "color": "#3399FF", "pretendToBe": "" },
+        { "id": "examplemod:blue_torch", "level": 12, "color": "#3399FF", "pretendToBe": "",
+          "flicker": true, "flickerSpeed": 6, "flickerStrength": 35 },
         { "id": "examplemod:*_lamp",     "level": 10, "color": "",        "pretendToBe": "minecraft:sea_lantern" }
       ]
     }
@@ -104,6 +110,9 @@ to add a row and **X** to remove one. Saving applies immediately.
 - `level`: intensity 1-15, used exactly. `0` = no held light at all, for unlit or burnt-out torches (e.g. `{ "id": "*:unlit_torch", "level": 0 }`).
 - `color`: `#RRGGBB`, or `""` to let the pack decide.
 - `pretendToBe`: any item id, or `""` for automatic.
+- `flicker`, `flickerSpeed` (1-20), `flickerStrength` (5-100, how far it dims as % of the intensity): held light only.
+  Shows in packs that use the held light level (PhotonFork, Complementary, BSL, KappaPT) and in Rethinking Voxels;
+  Photon and Solas use a fixed hand-light brightness. Optional: rows without them don't flicker.
 - `rgbIdMode`: `AUTO`, `ON` or `OFF` (the Rethinking Voxels colour-in-id trick).
 - `matchRenderedItem`: also change how your items are drawn (needed for Rethinking Voxels beta 9).
 - `placedLights`: give placed modded lights the id of the vanilla light they act as.

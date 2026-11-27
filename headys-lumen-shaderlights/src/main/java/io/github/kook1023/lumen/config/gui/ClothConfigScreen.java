@@ -41,6 +41,9 @@ public final class ClothConfigScreen {
         AbstractConfigListEntry<Integer> saturation;
         ColorPreviewEntry preview;
         AbstractConfigListEntry<String> pretend;
+        AbstractConfigListEntry<Boolean> flicker;
+        AbstractConfigListEntry<Integer> flickerSpeed;
+        AbstractConfigListEntry<Integer> flickerStrength;
         int originalHue;
         int originalSaturation;
 
@@ -75,6 +78,9 @@ public final class ClothConfigScreen {
             e.id = id.getValue() == null ? "" : id.getValue().trim();
             e.level = level.getValue();
             e.pretendToBe = pretend.getValue() == null ? "" : pretend.getValue().trim();
+            e.flicker = flicker.getValue();
+            e.flickerSpeed = flickerSpeed.getValue();
+            e.flickerStrength = flickerStrength.getValue();
             if (useColor.getValue()) {
                 boolean moved = hue.getValue() != originalHue || saturation.getValue() != originalSaturation;
                 // Untouched sliders keep the exact hex from the file (the sliders are only whole degrees/percent).
@@ -86,7 +92,10 @@ public final class ClothConfigScreen {
         }
     }
 
-    /** @param tab the tab to open on: 1 = General, 2 = Light items, 3 = Placed blocks (/lumen config 1|2|3) */
+    /**
+     * @param tab the tab to open on: 1 = General, 2 = Light items, 3 = Handheld, 4 = Placed blocks
+     *            (/lumen config 1-4)
+     */
     public static Screen create(Screen parent, int tab) {
         LumenConfig current = LumenConfig.get();
 
@@ -123,30 +132,10 @@ public final class ClothConfigScreen {
                 .setSaveConsumer(v -> LumenConfig.get().spoofTorchItemId = v)
                 .build());
 
-        general.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "send_color"), current.sendLightColor)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable(KEY + "send_color.tooltip"))
-                .setSaveConsumer(v -> LumenConfig.get().sendLightColor = v)
-                .build());
-
         general.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "nearest_item"), current.pickNearestColorItem)
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable(KEY + "nearest_item.tooltip"))
                 .setSaveConsumer(v -> LumenConfig.get().pickNearestColorItem = v)
-                .build());
-
-        general.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "match_rendered"), current.matchRenderedItem)
-                .setDefaultValue(true)
-                .setTooltip(Component.translatable(KEY + "match_rendered.tooltip"))
-                .setSaveConsumer(v -> LumenConfig.get().matchRenderedItem = v)
-                .build());
-
-        general.addEntry(eb.startEnumSelector(Component.translatable(KEY + "rgb_id_mode"),
-                        LumenConfig.IdColorMode.class, current.rgbIdMode)
-                .setDefaultValue(LumenConfig.IdColorMode.AUTO)
-                .setEnumNameProvider(mode -> Component.translatable(KEY + "rgb_id_mode." + mode.name().toLowerCase(Locale.ROOT)))
-                .setTooltip(Component.translatable(KEY + "rgb_id_mode.tooltip"))
-                .setSaveConsumer(v -> LumenConfig.get().rgbIdMode = v)
                 .build());
 
         // ---------------------------------------------------------------- Items tab
@@ -170,6 +159,9 @@ public final class ClothConfigScreen {
                     inner.add(row.hue);
                     inner.add(row.saturation);
                     inner.add(row.preview);
+                    inner.add(row.flicker);
+                    inner.add(row.flickerSpeed);
+                    inner.add(row.flickerStrength);
                     inner.add(row.pretend);
                     Component title = row.data.id.isBlank()
                             ? Component.translatable(KEY + "item.new")
@@ -196,6 +188,30 @@ public final class ClothConfigScreen {
                 newCell);
         items.addEntry(itemList);
 
+        // ---------------------------------------------------------------- Handheld tab
+        ConfigCategory hand = builder.getOrCreateCategory(Component.translatable(KEY + "category.handheld"));
+        hand.addEntry(eb.startTextDescription(Component.translatable(KEY + "handheld.help")).build());
+
+        hand.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "send_color"), current.sendLightColor)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable(KEY + "send_color.tooltip"))
+                .setSaveConsumer(v -> LumenConfig.get().sendLightColor = v)
+                .build());
+
+        hand.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "match_rendered"), current.matchRenderedItem)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable(KEY + "match_rendered.tooltip"))
+                .setSaveConsumer(v -> LumenConfig.get().matchRenderedItem = v)
+                .build());
+
+        hand.addEntry(eb.startEnumSelector(Component.translatable(KEY + "rgb_id_mode"),
+                        LumenConfig.IdColorMode.class, current.rgbIdMode)
+                .setDefaultValue(LumenConfig.IdColorMode.AUTO)
+                .setEnumNameProvider(mode -> Component.translatable(KEY + "rgb_id_mode." + mode.name().toLowerCase(Locale.ROOT)))
+                .setTooltip(Component.translatable(KEY + "rgb_id_mode.tooltip"))
+                .setSaveConsumer(v -> LumenConfig.get().rgbIdMode = v)
+                .build());
+
         // ---------------------------------------------------------------- Placed blocks tab
         ConfigCategory placed = builder.getOrCreateCategory(Component.translatable(KEY + "category.placed"));
         placed.addEntry(eb.startTextDescription(Component.translatable(KEY + "placed.help")).build());
@@ -215,7 +231,7 @@ public final class ClothConfigScreen {
         Screen screen = builder.build();
         // Pick the starting tab. (Cloth's setFallbackCategory does NOT work here: it compares tab names as plain text,
         // and our tab names are translated, so it never matches. The tab index is a public field, so set it directly.)
-        if (tab >= 2 && tab <= 3 && screen instanceof AbstractConfigScreen tabs) {
+        if (tab >= 2 && tab <= 4 && screen instanceof AbstractConfigScreen tabs) {
             tabs.selectedCategoryIndex = tab - 1;
         }
         return screen;
@@ -264,6 +280,23 @@ public final class ClothConfigScreen {
                 .build();
 
         row.preview = new ColorPreviewEntry(Component.translatable(KEY + "item.preview"), row::previewRgb, row::previewCaption);
+
+        row.flicker = eb.startBooleanToggle(Component.translatable(KEY + "item.flicker"), d.flicker)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable(KEY + "item.flicker.tooltip"))
+                .build();
+
+        row.flickerSpeed = eb.startIntSlider(Component.translatable(KEY + "item.flicker_speed"), d.flickerSpeed, 1, 20)
+                .setDefaultValue(6)
+                .setTooltip(Component.translatable(KEY + "item.flicker_speed.tooltip"))
+                .setTextGetter(v -> Component.translatable(KEY + "item.flicker_speed.value", v))
+                .build();
+
+        row.flickerStrength = eb.startIntSlider(Component.translatable(KEY + "item.flicker_strength"), d.flickerStrength, 5, 100)
+                .setDefaultValue(35)
+                .setTooltip(Component.translatable(KEY + "item.flicker_strength.tooltip"))
+                .setTextGetter(v -> Component.translatable(KEY + "item.flicker_strength.value", v))
+                .build();
 
         row.pretend = eb.startStringDropdownMenu(Component.translatable(KEY + "item.pretend"), d.pretendToBe)
                 .setSelections(LightPalette.ids())

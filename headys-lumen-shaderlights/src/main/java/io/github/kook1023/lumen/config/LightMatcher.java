@@ -24,8 +24,18 @@ public final class LightMatcher {
      * @param pretendTo  item the shader should think this is, or null for automatic
      * @param exact      true for items from your list: the level is used as-is (it can dim an item that glows by
      *                   itself). false for auto-detected torches: the level only ever raises the light.
+     * @param flickerSpeed    0 = steady light; otherwise roughly how many times per second the flame changes
+     * @param flickerStrength how far the flicker dims, 0..1 of the intensity
      */
-    public record Match(int level, Vector3f color, ResourceLocation pretendTo, boolean exact) {
+    public record Match(int level, Vector3f color, ResourceLocation pretendTo, boolean exact,
+                        float flickerSpeed, float flickerStrength) {
+        public Match(int level, Vector3f color, ResourceLocation pretendTo, boolean exact) {
+            this(level, color, pretendTo, exact, 0f, 0f);
+        }
+
+        public boolean flickers() {
+            return flickerSpeed > 0f && flickerStrength > 0f;
+        }
     }
 
     public static final Match NONE = new Match(0, null, null, false);
@@ -36,7 +46,8 @@ public final class LightMatcher {
     private LightMatcher() {
     }
 
-    private record Rule(Pattern pattern, Match match) {
+    /** @param source the entry's id as written in your list (for /lumen removeheld) */
+    private record Rule(Pattern pattern, Match match, String source) {
     }
 
     /**
@@ -134,6 +145,20 @@ public final class LightMatcher {
         return s.cache.computeIfAbsent(stack.getItem(), s::compute);
     }
 
+    /** @return the id of the list entry (possibly a wildcard) that matches this stack, or null if none does. */
+    public static String listEntryFor(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return null;
+        }
+        String full = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        for (Rule rule : snapshot.rules) {
+            if (rule.pattern().matcher(full).matches()) {
+                return rule.source();
+            }
+        }
+        return null;
+    }
+
     /** @return a translation key describing the problem, or empty if the id is fine (or blank). */
     public static Optional<String> validateId(String raw) {
         if (raw == null || raw.isBlank()) {
@@ -157,9 +182,11 @@ public final class LightMatcher {
         int level = Math.max(0, Math.min(15, e.level));
         if (level == 0) {
             // Level 0 = "no held light at all" (unlit / burnt-out torches): no colour, no pretend.
-            return new Rule(pattern, new Match(0, null, null, true));
+            return new Rule(pattern, new Match(0, null, null, true), e.id);
         }
-        return new Rule(pattern, new Match(level, color, pretend, true));
+        float speed = e.flicker ? Math.max(1, Math.min(20, e.flickerSpeed)) : 0f;
+        float strength = e.flicker ? Math.max(5, Math.min(100, e.flickerStrength)) / 100f : 0f;
+        return new Rule(pattern, new Match(level, color, pretend, true, speed, strength), e.id);
     }
 
     private static Pattern glob(String raw) {
