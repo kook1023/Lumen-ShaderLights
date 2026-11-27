@@ -23,16 +23,19 @@ import java.util.Map;
  *   texel 0: R,G = the pack's own block id (low, high byte)   B = flags: 1 custom colour, 2 flicker
  *   texel 1: R,G,B = custom colour
  *   texel 2: R = intensity 1-15, G = flicker speed 1-20, B = flicker strength 0-100 (percent)
+ *   last texel (383, 127): the signature "LUM" (76, 85, 77, 255), so a pack can tell the table is really there
  * </pre>
  * The pack's own block id lets the pack keep treating the block as what it is (a torch, lava, a furnace) for
  * everything except the light it gives.
  */
 public final class LightTable {
     public static final int BASE = 10000 + 1024;
-    public static final int MAX_ROWS = 16384;            // ids stay below 32768 (Iris stores them as 16-bit numbers)
+    public static final int MAX_ROWS = 16383;            // ids stay below 32768; the last row's spot holds the signature
     public static final int ROWS_PER_LINE = 128;
     public static final int WIDTH = ROWS_PER_LINE * 3;   // 384
-    public static final int HEIGHT = MAX_ROWS / ROWS_PER_LINE; // 128
+    public static final int HEIGHT = 128;
+    /** "LUM" in the last texel: packs check it and treat our ids as plain torches if the table is missing. */
+    public static final int SIGNATURE = (76 << 24) | (85 << 16) | (77 << 8) | 255;
     public static final ResourceLocation LOCATION = ResourceLocation.tryParse("headys_lumen:light_table");
 
     /** One row. rgb = -1: use the pack's own colour for that block. speed = 0: steady. */
@@ -120,6 +123,11 @@ public final class LightTable {
         return (r << 24) | (g << 16) | (b << 8) | 255;
     }
 
+    /** 0xRRGGBBAA -> the ABGR that NativeImage takes */
+    static int abgr(int c) {
+        return (c & 255) << 24 | ((c >> 8) & 255) << 16 | ((c >> 16) & 255) << 8 | ((c >>> 24) & 255);
+    }
+
     /** Writes the rows into the texture and sends it to the graphics card. Call on the render thread. */
     public static synchronized void upload() {
         if (!dirty) {
@@ -138,12 +146,10 @@ public final class LightTable {
             int x = (i % ROWS_PER_LINE) * 3;
             int y = i / ROWS_PER_LINE;
             for (int k = 0; k < 3; k++) {
-                int c = t[k];
-                // NativeImage takes ABGR
-                int abgr = (c & 255) << 24 | ((c >> 8) & 255) << 16 | ((c >> 16) & 255) << 8 | ((c >>> 24) & 255);
-                image.setPixelRGBA(x + k, y, abgr);
+                image.setPixelRGBA(x + k, y, abgr(t[k]));
             }
         }
+        image.setPixelRGBA(WIDTH - 1, HEIGHT - 1, abgr(SIGNATURE));
         texture.upload();
         dirty = false;
     }
