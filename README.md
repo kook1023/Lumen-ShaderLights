@@ -97,6 +97,7 @@ applies immediately.
       "rgbIdMode": "AUTO",
       "placedLights": true,
       "placedRecolorVanilla": true,
+      "placedFlicker": true,
       "matchRenderedItem": true,
       "items": [
         { "id": "minecraft:torch",       "level": 14, "color": "#FF8CD9", "pretendToBe": "" },
@@ -110,13 +111,17 @@ applies immediately.
 - `level`: intensity 1-15, used exactly. `0` = no held light at all, for unlit or burnt-out torches (e.g. `{ "id": "*:unlit_torch", "level": 0 }`).
 - `color`: `#RRGGBB`, or `""` to let the pack decide.
 - `pretendToBe`: any item id, or `""` for automatic.
-- `flicker`, `flickerSpeed` (1-20), `flickerStrength` (5-100, how far it dims as % of the intensity): held light only.
-  Shows in packs that use the held light level (PhotonFork, Complementary, BSL, KappaPT) and in Rethinking Voxels;
-  Photon and Solas use a fixed hand-light brightness. Optional: rows without them don't flicker.
+- `flicker`, `flickerSpeed` (1-20), `flickerStrength` (5-100, how far it dims as % of the intensity): the held light
+  flickers in packs that use the held light level (PhotonFork, Complementary, BSL, KappaPT) and in Rethinking Voxels;
+  Photon and Solas use a fixed hand-light brightness. Placed, it flickers only in the PhotonFork, which animates it
+  itself with one speed and strength for all placed lights (its *Colored Lights* settings). Optional: rows without
+  them don't flicker.
 - `rgbIdMode`: `AUTO`, `ON` or `OFF` (the Rethinking Voxels colour-in-id trick).
 - `matchRenderedItem`: also change how your items are drawn (needed for Rethinking Voxels beta 9).
 - `placedLights`: give placed modded lights the id of the vanilla light they act as.
 - `placedRecolorVanilla`: also change placed vanilla blocks that your list recolours (e.g. a pink `minecraft:torch`).
+- `placedFlicker`: placed lights with Flicker on flicker too, in packs that support it (the PhotonFork). No extra cost:
+  the pack animates it.
 
 ## Heady's Lumen: ShaderPack_PhotonFork
 A fork of **Photon** by SixthSurge with one changed file (`shaders/include/lighting/handheld_lighting.glsl`) and

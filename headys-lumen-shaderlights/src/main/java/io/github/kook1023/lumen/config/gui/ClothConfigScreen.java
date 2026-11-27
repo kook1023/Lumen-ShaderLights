@@ -228,6 +228,12 @@ public final class ClothConfigScreen {
                 .setSaveConsumer(v -> LumenConfig.get().placedRecolorVanilla = v)
                 .build());
 
+        placed.addEntry(eb.startBooleanToggle(Component.translatable(KEY + "placed_flicker"), current.placedFlicker)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable(KEY + "placed_flicker.tooltip"))
+                .setSaveConsumer(v -> LumenConfig.get().placedFlicker = v)
+                .build());
+
         Screen screen = builder.build();
         // Pick the starting tab. (Cloth's setFallbackCategory does NOT work here: it compares tab names as plain text,
         // and our tab names are translated, so it never matches. The tab index is a public field, so set it directly.)

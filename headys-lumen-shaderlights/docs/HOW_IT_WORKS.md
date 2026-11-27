@@ -88,8 +88,11 @@ cannot apply to placed blocks: their brightness is the block's own light level.
 **Exact colour for placed blocks (PhotonFork).** A pack that contains `shaders/lumen.properties` says it understands
 colour-coded ids (`PackScanner.packUnderstandsColorIds`, checked once per pack while Iris loads it). For such a pack,
 a placed block whose entry has a colour gets the id `10000 + 1024 + code` instead of a vanilla light's id, where
-`code = hue (6 bits) | saturation << 6 (3 bits) | intensity << 9 (4 bits)` (`PlacedColorId`). The pack renders the
-block like a torch and lights its light volume with that colour, at its torch brightness times intensity / 14.
+`code = hue (6 bits) | saturation << 6 (3 bits) | intensity << 9 (4 bits) | flicker << 13 (1 bit)` (`PlacedColorId`).
+The pack renders the block like a torch and lights its light volume with that colour, at its torch brightness times
+intensity / 14. With the flicker bit the pack dims that light by smooth noise every frame, so placed flicker costs no
+chunk reloads; a flickering entry without a colour is coded with its vanilla light's palette colour so it can carry
+the bit.
 Colour brightness (the V of HSV) is not stored; 64 hues x 8 saturations is close to, not exactly, your colour.
 
 Setting: "Also change how the item is drawn" (`matchRenderedItem`). Side effect: your item also *looks* like

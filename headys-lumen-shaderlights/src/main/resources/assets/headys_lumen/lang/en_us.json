@@ -37,7 +37,7 @@
   "headys_lumen.config.item.pretend": "Pretend to be (optional)",
   "headys_lumen.config.item.pretend.tooltip": "For shader packs that colour held lights per item. Pick an item the pack knows (e.g. minecraft:sea_lantern for a cyan glow). Empty = automatic. Type any item id or choose from the list.",
   "headys_lumen.config.item.flicker": "Flicker",
-  "headys_lumen.config.item.flicker.tooltip": "Makes the held light flicker like a flame. Shows in packs that use the held light level, such as the PhotonFork, Complementary, BSL and KappaPT. Packs with a fixed hand-light brightness (Photon, Solas) show no flicker. Placed blocks do not flicker.",
+  "headys_lumen.config.item.flicker.tooltip": "Makes the held light flicker like a flame. Shows in packs that use the held light level, such as the PhotonFork, Complementary, BSL and KappaPT. Packs with a fixed hand-light brightness (Photon, Solas) show no flicker. Placed blocks flicker only in the PhotonFork (see the Placed blocks tab).",
   "headys_lumen.config.item.flicker_speed": "Flicker speed",
   "headys_lumen.config.item.flicker_speed.tooltip": "How fast it flickers: 1 = a slow waver, 20 = a fast, nervous flame. Only used when Flicker is on.",
   "headys_lumen.config.item.flicker_speed.value": "Flicker speed: %s",
@@ -61,5 +61,7 @@
   "headys_lumen.config.placed_lights": "Placed lights",
   "headys_lumen.config.placed_lights.tooltip": "Shader packs only know vanilla light blocks. With this on, placed modded torches and lanterns get the id of the vanilla light they act as, so the pack gives them its coloured light. It also stops packs such as Kappa from treating a modded torch as a solid block that casts a full block of shadow.",
   "headys_lumen.config.placed_recolor_vanilla": "Also recolour placed vanilla blocks",
-  "headys_lumen.config.placed_recolor_vanilla.tooltip": "If your Light items list gives a vanilla item a colour or a \"Pretend to be\" (e.g. a pink minecraft:torch), placed blocks of it change too. Off: only your held item changes."
+  "headys_lumen.config.placed_recolor_vanilla.tooltip": "If your Light items list gives a vanilla item a colour or a \"Pretend to be\" (e.g. a pink minecraft:torch), placed blocks of it change too. Off: only your held item changes.",
+  "headys_lumen.config.placed_flicker": "Placed lights flicker too",
+  "headys_lumen.config.placed_flicker.tooltip": "Items from your list with Flicker on also flicker when placed. Only in shader packs built for it (Heady's Lumen: ShaderPack_PhotonFork); other packs show them steady. The shader pack animates it, so it costs no extra performance. All placed lights share one flicker speed and strength, set in the pack."
 }

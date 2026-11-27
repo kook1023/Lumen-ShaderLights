@@ -63,6 +63,8 @@ public final class LumenConfig {
     public boolean placedLights = true;
     /** Placed blocks: also change placed VANILLA blocks that your list recolours (e.g. a pink minecraft:torch). */
     public boolean placedRecolorVanilla = true;
+    /** Placed blocks: lights with Flicker on also flicker when placed (packs that support it: the PhotonFork). */
+    public boolean placedFlicker = true;
     /** How to treat packs that read the item id as a colour (Rethinking Voxels). */
     public IdColorMode rgbIdMode = IdColorMode.AUTO;
     /** Your own items. */

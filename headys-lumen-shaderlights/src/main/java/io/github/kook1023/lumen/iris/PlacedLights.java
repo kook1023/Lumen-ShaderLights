@@ -51,6 +51,7 @@ public final class PlacedLights {
     private static volatile Object2IntMap<BlockState> lastAugmented;
     private static volatile int lastAdded;
     private static volatile int lastCoded;
+    private static volatile int lastFlickering;
     private static volatile List<String> lastPoses = List.of();
     private static volatile String failure;
 
@@ -115,6 +116,7 @@ public final class PlacedLights {
         LumenConfig cfg = LumenConfig.get();
         int added = 0;
         codedCount = 0;
+        flickerCount = 0;
         poses = new ArrayList<>();
         if (cfg.enabled && cfg.placedLights) {
             List<Ref> refs = knownRefs(pack);
@@ -125,6 +127,7 @@ public final class PlacedLights {
         }
         lastAdded = added;
         lastCoded = codedCount;
+        lastFlickering = flickerCount;
         lastPoses = List.copyOf(poses);
         LumenShaderLights.LOGGER.info("Placed lights: {} block states given a light id", added);
         return out;
@@ -151,6 +154,7 @@ public final class PlacedLights {
     }
 
     private static int codedCount;
+    private static int flickerCount;
     private static List<String> poses = new ArrayList<>();
 
     private static int addBlock(Block block, Object2IntMap<BlockState> pack, Object2IntMap<BlockState> out,
@@ -165,7 +169,9 @@ public final class PlacedLights {
         }
         ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(block);
         boolean vanilla = "minecraft".equals(blockId.getNamespace());
-        boolean override = m.exact() && (m.color() != null || m.pretendTo() != null);
+        // Flicker only changes a block in packs that can show it (colour-coded ids)
+        boolean flicker = colorIds && cfg.placedFlicker && m.flickers();
+        boolean override = m.exact() && (m.color() != null || m.pretendTo() != null || flicker);
         if (vanilla && !(override && cfg.placedRecolorVanilla)) {
             return 0; // the pack already knows vanilla blocks; only change them when your list asks for it
         }
@@ -178,6 +184,9 @@ public final class PlacedLights {
         if (target == null) {
             return 0;
         }
+        // Colour-coded id (packs with shaders/lumen.properties): your colour, or for a flickering light without one
+        // the colour of the vanilla light it poses as, so it can carry the flicker flag
+        Vector3f coded = !colorIds ? null : m.color() != null ? m.color() : flicker ? paletteColor(target) : null;
         // A wall torch is placed by the same item as the standing one, but is its own block.
         boolean isWall = item instanceof BlockItem bi && bi.getBlock() != block;
         if (isWall) {
@@ -201,16 +210,32 @@ public final class PlacedLights {
             // id -1: the pack has no id for that exact state, e.g. it lists only "redstone_torch:lit=true",
             // so an unlit modded state stays as it was
             if (id >= 0) {
-                if (colorIds && m.color() != null) {
-                    // The pack (PhotonFork) understands colour-coded ids: exact colour and intensity
-                    id = PlacedColorId.encode(m.color(), m.level());
+                if (coded != null) {
+                    // The pack (PhotonFork) understands colour-coded ids: exact colour, intensity and flicker
+                    id = PlacedColorId.encode(coded, m.level(), flicker);
                     codedCount++;
+                    if (flicker) {
+                        flickerCount++;
+                    }
                 }
                 out.put(state, id);
                 added++;
             }
         }
         return added;
+    }
+
+    /** The colour of a vanilla light from the palette (torch orange if it is not listed). */
+    private static Vector3f paletteColor(Block target) {
+        String key = BuiltInRegistries.BLOCK.getKey(target).toString();
+        int rgb = 0xFF9933;
+        for (LightPalette.Ref r : LightPalette.REFS) {
+            if (r.id().equals(key)) {
+                rgb = r.rgb();
+                break;
+            }
+        }
+        return new Vector3f(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f);
     }
 
     /** The vanilla block to pose as: your "Pretend to be", else the closest colour, else a torch. */
@@ -302,7 +327,8 @@ public final class PlacedLights {
             return "waiting for a shader pack";
         }
         return lastAdded + " block states use a vanilla light's id"
-                + (lastCoded > 0 ? " (" + lastCoded + " with your exact colour)" : "");
+                + (lastCoded > 0 ? " (" + lastCoded + " with your exact colour"
+                        + (lastFlickering > 0 ? ", " + lastFlickering + " flickering" : "") + ")" : "");
     }
 
     /** For /lumen status: which vanilla light each of your placed blocks poses as (first few). */
