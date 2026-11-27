@@ -263,12 +263,12 @@ public final class ClothConfigScreen {
 
         addGroup(eb, flick, preset, "torches", current.flickerTorches, true, v -> LumenConfig.get().flickerTorches = v);
         addGroup(eb, flick, preset, "lanterns", current.flickerLanterns, true, v -> LumenConfig.get().flickerLanterns = v);
-        addGroup(eb, flick, preset, "fire", current.flickerFire, false, v -> LumenConfig.get().flickerFire = v);
+        addGroup(eb, flick, preset, "fire", current.flickerFire, true, v -> LumenConfig.get().flickerFire = v);
         addGroup(eb, flick, preset, "redstone", current.flickerRedstone, false, v -> LumenConfig.get().flickerRedstone = v);
         addGroup(eb, flick, preset, "sea", current.flickerSea, false, v -> LumenConfig.get().flickerSea = v);
-        addGroup(eb, flick, preset, "nether", current.flickerNether, false, v -> LumenConfig.get().flickerNether = v);
-        addGroup(eb, flick, preset, "froglights", current.flickerFroglights, false, v -> LumenConfig.get().flickerFroglights = v);
-        addGroup(eb, flick, preset, "cave", current.flickerCave, false, v -> LumenConfig.get().flickerCave = v);
+        addGroup(eb, flick, preset, "nether", current.flickerNether, true, v -> LumenConfig.get().flickerNether = v);
+        addGroup(eb, flick, preset, "froglights", current.flickerFroglights, true, v -> LumenConfig.get().flickerFroglights = v);
+        addGroup(eb, flick, preset, "cave", current.flickerCave, true, v -> LumenConfig.get().flickerCave = v);
 
         Screen screen = builder.build();
         // Pick the starting tab. (Cloth's setFallbackCategory does NOT work here: it compares tab names as plain text,

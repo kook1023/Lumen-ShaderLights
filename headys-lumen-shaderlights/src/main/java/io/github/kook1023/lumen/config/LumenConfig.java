@@ -81,12 +81,12 @@ public final class LumenConfig {
     public int defaultFlickerStrength = 35;
     public boolean flickerTorches = true;
     public boolean flickerLanterns = true;
-    public boolean flickerFire = false;
+    public boolean flickerFire = true;
     public boolean flickerRedstone = false;
     public boolean flickerSea = false;
-    public boolean flickerNether = false;
-    public boolean flickerFroglights = false;
-    public boolean flickerCave = false;
+    public boolean flickerNether = true;
+    public boolean flickerFroglights = true;
+    public boolean flickerCave = true;
     /** How to treat packs that read the item id as a colour (Rethinking Voxels). */
     public IdColorMode rgbIdMode = IdColorMode.AUTO;
     /** Your own items. */

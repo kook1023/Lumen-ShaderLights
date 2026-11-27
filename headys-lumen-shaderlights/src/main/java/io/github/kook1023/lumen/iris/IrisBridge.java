@@ -138,6 +138,11 @@ public final class IrisBridge {
                 flickerSource = own.flickers() ? own : off.flickers() ? off : LightMatcher.NONE;
             }
             float flicker = Flicker.factor(flickerSource, flickerSource == off ? 1 : 0);
+            if (flicker < 1f && level == 0 && colorSource == LightMatcher.NONE) {
+                // Iris gives some vanilla lights level 0 in the hand (a lava bucket is not a block); packs that go by
+                // the level need one to show a flicker
+                level = levelOfNonBlockLight(flickerSource == off ? player.getOffhandItem() : player.getItemInHand(ownHand));
+            }
             if (flicker < 1f && level > 0) {
                 level = Math.max(0, Math.min(15, Math.round(level * flicker)));
             }
@@ -148,7 +153,7 @@ public final class IrisBridge {
             // --- A. exact colour uniform (heldBlockLightColor) ---
             if (cfg.sendLightColor && h.lightColor() != null && colorSource.color() != null) {
                 h.lightColor().set(supplier, new Vector3f(colorSource.color()));
-            } else if (flicker < 1f && cfg.sendLightColor && h.lightColor() != null && level > 0
+            } else if (flicker < 1f && cfg.sendLightColor && h.lightColor() != null
                     && PackScanner.packUnderstandsColorIds()) {
                 // A light without your colour (a vanilla torch) uses the pack's own colour table, which ignores the
                 // light level. Packs with the Lumen marker read a GREY colour as "dim by this much" instead.
@@ -177,6 +182,16 @@ public final class IrisBridge {
      * Items the pack already knows (e.g. minecraft:torch) normally keep the pack's own id. But if YOU put that item in
      * your list with a colour or a "Pretend to be", your settings win: that is how you make a pink torch.
      */
+    /** Vanilla lights that Iris gives light level 0 in the hand, because their item does not place a glowing block. */
+    private static int levelOfNonBlockLight(net.minecraft.world.item.ItemStack stack) {
+        String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        return switch (id) {
+            case "minecraft:lava_bucket" -> 15;
+            case "minecraft:glow_berries" -> 14;
+            default -> 0;
+        };
+    }
+
     private static void applyItemId(Handles h, Object supplier, LumenConfig cfg, Match own,
                                     Object2IntFunction<Object> map, float flicker) throws ReflectiveOperationException {
         boolean canLookUp = map != null && h.keyCtor() != null;

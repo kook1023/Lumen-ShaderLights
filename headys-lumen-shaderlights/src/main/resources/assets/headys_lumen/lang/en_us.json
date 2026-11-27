@@ -73,7 +73,7 @@
   "headys_lumen.config.flicker.preset.groups": "Use the groups below",
   "headys_lumen.config.flicker.preset.immersion": "Immersion mode",
   "headys_lumen.config.flicker.preset.all": "Flicker all lights",
-  "headys_lumen.config.flicker.preset.tooltip": "Use the groups below: the switches decide. Immersion mode: a hand-picked set of lights that would really flicker (torches, lanterns, fire, campfires, candles, furnaces, glow lichen and glow berries, shroomlight, magma, lava, nether portal, crying obsidian, end portal and gateway, enchanting table, ender chest, brewing stand); glowstone, froglights, sea lanterns, redstone, amethyst and sculk stay steady. Flicker all lights: every light, even rows set to Off. In the last two modes the switches below are ignored (shown in grey).",
+  "headys_lumen.config.flicker.preset.tooltip": "Use the groups below: the switches decide. Immersion mode: a hand-picked set of lights that would really flicker (torches, lanterns, fire, campfires, candles, furnaces, froglights, glow lichen and glow berries, shroomlight, magma, lava and lava buckets, nether portal, crying obsidian, end portal and gateway, enchanting table, ender chest, brewing stand); glowstone, sea lanterns, redstone, amethyst and sculk stay steady. Flicker all lights: every light, even rows set to Off. In the last two modes the switches below are ignored (shown in grey).",
   "headys_lumen.config.flicker.speed": "Default flicker speed",
   "headys_lumen.config.flicker.speed.tooltip": "Speed for every light that flickers because of this tab. 1 = a slow waver, 20 = a fast, nervous flame.",
   "headys_lumen.config.flicker.strength": "Default flicker strength",

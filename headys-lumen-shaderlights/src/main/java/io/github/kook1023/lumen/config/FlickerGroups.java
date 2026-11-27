@@ -43,7 +43,7 @@ public final class FlickerGroups {
             Map.entry("sculk_sensor", Group.CAVE), Map.entry("calibrated_sculk_sensor", Group.CAVE),
             Map.entry("sculk_catalyst", Group.CAVE));
 
-    /** Immersion mode: torches, lanterns, all fire lights, these, and cave lights except amethyst and sculk. */
+    /** Immersion mode: torches, lanterns, all fire lights, froglights, these, and cave lights except amethyst and sculk. */
     private static final Set<String> IMMERSION_EXTRA = Set.of(
             "shroomlight", "magma_block", "lava", "lava_bucket", "nether_portal", "crying_obsidian",
             "end_portal", "end_gateway", "enchanting_table", "ender_chest", "brewing_stand");
@@ -99,7 +99,7 @@ public final class FlickerGroups {
         }
         Group g = groupOf(id);
         String path = id.getPath();
-        if (g == Group.TORCHES || g == Group.LANTERNS || g == Group.FIRE) {
+        if (g == Group.TORCHES || g == Group.LANTERNS || g == Group.FIRE || g == Group.FROGLIGHTS) {
             return true;
         }
         if (g == Group.CAVE) {

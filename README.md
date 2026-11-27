@@ -16,7 +16,7 @@ intensity (see below).
   preview box), an optional **"Pretend to be"** item, and **Flicker**: *Follow group* (default), *On* (with its own
   speed and strength) or *Off*.
 - **Flicker** like a flame, held and placed. The **Flicker** tab decides for every light that follows it: the group
-  switches (torches and lanterns on by default; fire, redstone, sea, nether, froglights and cave lights), **Immersion
+  switches (torches, lanterns, fire, nether, froglights and cave lights on by default; redstone and sea lights off), **Immersion
   mode** (a hand-picked set of lights that would really flicker) or **Flicker all lights**, with a default speed and
   strength.
 - **Vanilla items can be overridden**: add e.g. `minecraft:torch` with a pink colour and your settings win over the
@@ -109,12 +109,12 @@ applies immediately.
       "defaultFlickerStrength": 35,
       "flickerTorches": true,
       "flickerLanterns": true,
-      "flickerFire": false,
+      "flickerFire": true,
       "flickerRedstone": false,
       "flickerSea": false,
-      "flickerNether": false,
-      "flickerFroglights": false,
-      "flickerCave": false,
+      "flickerNether": true,
+      "flickerFroglights": true,
+      "flickerCave": true,
       "matchRenderedItem": true,
       "items": [
         { "id": "minecraft:torch",       "level": 14, "color": "#FF8CD9", "pretendToBe": "" },
